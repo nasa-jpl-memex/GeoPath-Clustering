@@ -1,0 +1,193 @@
+    html,
+    body {
+        height: 100%;
+        width: 100%;
+    }
+    body {
+        margin: 0;
+    }
+    #map {
+        width: 100%;
+        height: 100%;
+    }
+    svg {
+        position: relative;
+    }
+/*    path {
+        fill: yellow;
+        stroke-width: 2px;
+        stroke: red;
+        stroke-opacity: 1;
+    }*/
+    .travelMarker {
+        fill: yellow;
+        opacity: 0.75;
+    }
+    .waypoints {
+        fill: black;
+        opacity: 0.6;
+    }
+}
+.drinks {
+    stroke: black;
+    fill: red;
+}
+.lineConnect {
+    fill: none;
+    stroke: #00ccff;
+    opacity: 1;
+    stroke-width: 8;
+}
+.locnames {
+    fill: black;
+    text-shadow: 1px 1px 1px #FFF, 3px 3px 5px #000;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+#custom-search-input{
+    border-radius: 0px;
+    background-color: #fff;
+    line-height: 0px;
+}
+
+#custom-search-input input{
+    border: 0;
+    box-shadow: none;
+}
+
+#custom-search-input button{
+    background: none;
+    box-shadow: none;
+    border: 0;
+    color: #666666;
+}
+
+#custom-search-input button:hover{
+    border: 0;
+    box-shadow: none;
+}
+
+#custom-search-input .glyphicon-search{
+    font-size: 15px;
+}
+
+#title{
+    font-size: 20px;
+    color: #fff;
+}
+
+#searchbox{
+    font-size: 10px;
+    color: #000000;
+}
+
+.badge{
+    text-align: right;
+    margin-left: 10%;
+}
+
+.navbar{
+    margin-bottom: 0px;
+}
+
+/*Route clusetring CSS settings*/
+
+#states {
+  fill: #aaaaaa;
+}
+
+#states .active {
+  fill: #ff0000;
+  fill-opacity: .5;
+}
+
+#state-borders {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+path.link {
+  fill: none;
+  stroke: #666666;
+  stroke-width: 1.5px;
+}
+
+.stroke {
+  fill: none;
+  stroke: #000;
+  stroke-width: 3px;
+}
+
+.fill {
+  fill: #fff;
+}
+
+.graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: .5px;
+  stroke-opacity: .5;
+}
+
+.route {
+  fill: none;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+#clusetring_map{
+    /*float: right;*/
+    padding-left: 20%;
+}
+
+#cluster_phone{
+    text-align: center;
+    color: #ffffff;
+}
+
+#num_phones{
+    color: #ffffff;
+    font-size: 20px;
+}
+
+
+
+
+.sphere {
+  fill: #fff;
+}
+
+.land {
+  fill: #000;
+  opacity: 0.2;
+}
+
+.boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.pin {
+
+}
+
+circle {
+	fill: rgba(245, 15, 15, 0.42);
+}
+
+circle:hover {
+  fill: #ff0000;
+}

@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <script src="{{ jquery }}"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" type="text/javascript"></script>
+    <script src="http://d3js.org/d3.geo.projection.v0.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ simple_sidebar }}">
+    <link rel="stylesheet" href="{{ app_css }}">
+    </head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">Memex</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <!--<li><a href="/phonelocator">Phone Locator <span class="sr-only">(current)</span></a></li>-->
+        <li class="active"><a href="/routeclustering">Route Clustering</a></li>
+        <li><a href="/cityclustering">Route Clustering by City</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-1">
+            <div id="sidebar-wrapper" style="background-color: rgba(0, 0, 0, 0.7); max-width: 100%; overflow-x: hidden;">
+                <ul class="sidebar-nav">
+                    <div class="input-group col-md-12" id="phone_place_holder">
+                        <span id="cluster_phone" >No phone number found, click on paths</span>
+                    </div>    
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-10">
+            <div id="clusetring_map"></div>
+        </div>
+        <div class="col-md-1">
+            {% for code in all_codes %}
+                <a onclick="clickline({'code':['{{ code[0] }}']})">{{ code[1] }}</a><br>
+            {% endfor %}
+        </div>
+        </div>
+    </div>
+</div>
+<script>
+var width = 960,
+    height = 960,
+    scale0 = (width - 1) / 2 / Math.PI;
+
+var projection = d3.geo.mercator();
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("#clusetring_map").append("svg")
+    .attr("width", "100%")
+    .attr("height", height)
+  .append("g");
+
+var g = svg.append("g");
+
+svg.append("rect")
+    .attr("class", "overlay")
+    .attr("width", width)
+    .attr("height", height);
+
+
+var g = svg.append("g");
+var stateGroup = g.append('g');
+var arcGroup = g.append('g');
+
+function mouseover(d) {
+    var code = d.code;
+    console.log(d3.selectAll("#"+code));
+    d3.selectAll("#"+code).style("stroke", "#ff0000");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "3.5px");
+}
+
+function mouseout(d) {
+    var code = d.code;
+    d3.selectAll("#"+code).style("stroke", "#ffcc00");
+    d3.selectAll("#"+code).style("stroke-opacity", "0.2");
+    d3.selectAll("#"+code).style("stroke-width", "2px");
+}
+
+function clickline(d) {
+    var code = d.code;
+    d3.selectAll("#"+code).style("stroke", "#ff0000");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "3.5px");
+    var lines = d3.selectAll("#"+"a666");
+    var num_phones = lines[0].length;
+    document.getElementById("phone_place_holder").innerHTML = "<span id='num_phones'>" + num_phones + " phone number found <span>";
+    lines[0].forEach(function(entry){
+        document.getElementById("phone_place_holder").innerHTML += '<li id="cluster_phone">' + entry.attributes.value.value + '</li>';
+      })
+}
+
+d3.json("{{ data }}/world-110m.json", function(error, world) {
+  if (error) throw error;
+
+  stateGroup.append("path")
+      .datum(topojson.merge(world, world.objects.countries.geometries))
+      .attr("class", "land")
+      .attr("d", path);
+
+  g.append("path")
+      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+      .attr("class", "boundary")
+      .attr("d", path);
+      
+    d3.csv("{{ data }}nasacenters.csv", function(error, d) {
+        var t = eval('{{cluster|tojson|safe}}');
+        var data = t;
+    
+        links = [];
+        for(var i=0, len=data.length; i<len; i++){
+            links.push({
+                type: "LineString",
+                coordinates: [
+                    [ data[i].lon1, data[i].lat1 ],
+                    [ data[i].lon2, data[i].lat2 ]
+                ],
+                code: data[i].code,
+                phone: data[i].phone,
+            });
+        }
+
+        var pathArcs = arcGroup.selectAll(".arc")
+            .data(links);
+
+        pathArcs.enter()
+            .append("path")
+            .attr({
+                'class': 'arc'
+            }).style({ 
+                fill: 'none',
+            })
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
+            .on("click", clickline);
+
+        d3.selectAll(".arc")
+          .attr({'id': function(d) { return d.code }})
+          .attr({'value': function(d) { return d.phone }});
+            pathArcs.attr({
+                d: path
+            })
+            .style({
+                stroke: '#ffcc00',
+                "stroke-width": '2px',
+                "stroke-opacity": 0.2,
+            })
+        pathArcs.exit().remove();
+    });
+});
+
+
+var zoom = d3.behavior.zoom()
+    .on("zoom",function() {
+        g.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+  });
+
+svg.call(zoom).call(zoom.event);
+
+
+    </script>
+  </body>
+</html>
