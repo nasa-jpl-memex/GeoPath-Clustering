@@ -20,7 +20,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 import cPickle as pickle
 
-n_clusters=500
+n_clusters=50
 
 # Test data
 # data = { "ph1":["LA", "NYC", "Chicago"], "ph2":["LA","NYC","Seattle"], "ph3":["tst1","tst2","tst3"] }
@@ -32,6 +32,13 @@ data = eval(line)
 
 phone_numbers = data.keys()
 phone_location_vector = []
+
+#Remove phone_numbers with just one location
+for phone_number in phone_numbers:
+    if len(data[phone_number]) < 2:
+        del data[phone_number]
+
+phone_numbers = data.keys()
 
 # Find all uniques_locations
 uniques_locations = set([])

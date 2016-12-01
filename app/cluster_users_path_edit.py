@@ -27,6 +27,13 @@ phone_numbers = data.keys()
 list_location_encoded = []
 similarity_matrix = np.zeros((len(data),len(data)))
 
+#Remove phone_numbers with just one location
+for phone_number in phone_numbers:
+    if len(data[phone_number]) < 2:
+        del data[phone_number]
+
+phone_numbers = data.keys()
+
 # Encode locations to unique integers
 # Map a unique integer to each location
 loc_to_idx = {}
@@ -67,8 +74,10 @@ def edit_dist(i,j):
             else:
                 distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
         distances = distances_
-
-    return distances[-1]
+    
+    # Normalize distance w.r.t. to len(s1) to ensure similar result for varied length lists
+    # Subtracting it from 1 to make it distance. larger are farther from each other
+    return 1 - (1.0 * distances[-1] / len(s1))
 
 n_jobs = 2
 
@@ -78,7 +87,7 @@ similarity_matrix = pairwise_distances(X,metric=edit_dist, n_jobs=n_jobs)
 pickle.dump(similarity_matrix, open("./static/data/similarity_matrix_edit.p","w"), protocol=2)
 print "Calculated similarity_matrix", similarity_matrix.shape
 
-db = DBSCAN(eps=2, min_samples=2, metric='precomputed', n_jobs=n_jobs).fit(similarity_matrix)
+db = DBSCAN(eps=0.5, min_samples=2, metric='precomputed', n_jobs=n_jobs).fit(similarity_matrix)
   
 print 'Number of unique cluster lables', len(np.unique(db.labels_))
 
