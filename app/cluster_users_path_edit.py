@@ -39,7 +39,7 @@ loc_to_idx = dict([(v,k) for k,v in enumerate(uniques_locations)])
 
 print "Unique locations- ", len(loc_to_idx)
 
-for phone_number in phone_numbers:
+for phone_number in phone_numbers[0:10000]:
     str_location = data[phone_number]
     encoded_location = [ loc_to_idx[location] for location in str_location]
     
@@ -70,13 +70,15 @@ def edit_dist(i,j):
 
     return distances[-1]
 
+n_jobs = 2
 
-X = np.arange(len(data)).reshape(-1, 1)
-similarity_matrix = pairwise_distances(X,metric=edit_dist, n_jobs=2)
+X = np.arange(len(list_location_encoded)).reshape(-1, 1)
+similarity_matrix = pairwise_distances(X,metric=edit_dist, n_jobs=n_jobs)
 
 pickle.dump(similarity_matrix, open("./static/data/similarity_matrix_edit.p","w"), protocol=2)
+print "Calculated similarity_matrix", similarity_matrix.shape
 
-db = DBSCAN(eps=2, min_samples=2, metric='precomputed').fit(similarity_matrix)
+db = DBSCAN(eps=2, min_samples=2, metric='precomputed', n_jobs=n_jobs).fit(similarity_matrix)
   
 print 'Number of unique cluster lables', len(np.unique(db.labels_))
 
