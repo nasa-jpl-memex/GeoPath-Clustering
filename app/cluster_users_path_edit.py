@@ -46,7 +46,7 @@ loc_to_idx = dict([(v,k) for k,v in enumerate(uniques_locations)])
 
 print "Unique locations- ", len(loc_to_idx)
 
-for phone_number in phone_numbers[0:10000]:
+for phone_number in phone_numbers:
     str_location = data[phone_number]
     encoded_location = [ loc_to_idx[location] for location in str_location]
     
@@ -76,8 +76,7 @@ def edit_dist(i,j):
         distances = distances_
     
     # Normalize distance w.r.t. to len(s1) to ensure similar result for varied length lists
-    # Subtracting it from 1 to make it distance. larger are farther from each other
-    return 1 - (1.0 * distances[-1] / len(s1))
+    return (1.0 * distances[-1] / len(s1))
 
 n_jobs = 2
 
