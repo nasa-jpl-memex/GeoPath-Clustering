@@ -13,7 +13,7 @@ Edit Dist : 1
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.metrics.pairwise import pairwise_distances
-
+import difflib
 import cPickle as pickle
 
 # Test data
@@ -27,6 +27,17 @@ phone_numbers = data.keys()
 list_location_encoded = []
 similarity_matrix = np.zeros((len(data),len(data)))
 
+# replace consecutive repeated locations with one
+for phone_number in phone_numbers:
+    refined_location = []
+    prev_loc = ""
+    for loc in data[phone_number]:
+        if not prev_loc == loc:
+            refined_location.append(loc)
+        prev_loc=loc
+    
+    data[phone_number] = refined_location
+    
 #Remove phone_numbers with just one location
 for phone_number in phone_numbers:
     if len(data[phone_number]) < 2:
@@ -78,15 +89,26 @@ def edit_dist(i,j):
     # Normalize distance w.r.t. to len(s1) to ensure similar result for varied length lists
     return (1.0 * distances[-1] / len(s1))
 
+def difflib_sim(i,j):
+    i, j = int(i[0]), int(j[0])
+    if i == j:
+        return 0 
+    
+    s1, s2 = list_location_encoded[i], list_location_encoded[j]
+    
+    print 1 - difflib.SequenceMatcher(None,s1,s2).ratio(), s1, s2 
+    return 1 - difflib.SequenceMatcher(None,s1,s2).ratio()
+    
+
 n_jobs = 2
 
 X = np.arange(len(list_location_encoded)).reshape(-1, 1)
-similarity_matrix = pairwise_distances(X,metric=edit_dist, n_jobs=n_jobs)
+similarity_matrix = pairwise_distances(X,metric=difflib_sim, n_jobs=n_jobs)
 
-pickle.dump(similarity_matrix, open("./static/data/similarity_matrix_edit.p","w"), protocol=2)
 print "Calculated similarity_matrix", similarity_matrix.shape
+pickle.dump(similarity_matrix, open("./static/data/similarity_matrix_edit.p","w"), protocol=2)
 
-db = DBSCAN(eps=0.5, min_samples=2, metric='precomputed', n_jobs=n_jobs).fit(similarity_matrix)
+db = DBSCAN(eps=0.2, metric='precomputed', n_jobs=n_jobs).fit(similarity_matrix)
   
 print 'Number of unique cluster lables', len(np.unique(db.labels_))
 
