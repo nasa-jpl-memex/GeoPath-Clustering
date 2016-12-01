@@ -10,7 +10,6 @@ U2 : [013]
 
 Edit Dist : 1
 '''
-import editdistance
 import numpy as np
 from sklearn.cluster import DBSCAN
 import cPickle as pickle
@@ -40,27 +39,35 @@ print "Unique locations- ", len(loc_to_idx)
 
 for phone_number in phone_numbers:
     str_location = data[phone_number]
-    encoded_location = [ str(loc_to_idx[location]) for location in str_location]
+    encoded_location = [ loc_to_idx[location] for location in str_location]
     
-    list_location_encoded.append("".join(encoded_location) )
+    list_location_encoded.append(encoded_location) 
 
 print "Encoded locations, Total data set- ", len(list_location_encoded)
-
-# for i in range(len(phone_numbers)):
-#     for j in range(i,len(phone_numbers)):
-#         dist = edit_dist(list_location_encoded[i],list_location_encoded[j])
-#         
-#         similarity_matrix[i][j] = dist
-#         similarity_matrix[j][i] = dist
-# 
-# db = DBSCAN(eps=0.9, min_samples=2, metric='precomputed').fit(similarity_matrix)
 
 
 def edit_dist(i,j):
     i, j = int(i[0]), int(j[0])
     if i == j:
         return 0 
-    return editdistance.eval(list_location_encoded[i],list_location_encoded[j])
+    
+    s1, s2 = list_location_encoded[i], list_location_encoded[j]
+    
+    if len(s1) > len(s2):
+        s1, s2 = s2, s1
+
+    distances = range(len(s1) + 1)
+    for i2, c2 in enumerate(s2):
+        distances_ = [i2+1]
+        for i1, c1 in enumerate(s1):
+            if c1 == c2:
+                distances_.append(distances[i1])
+            else:
+                distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+        distances = distances_
+
+    return distances[-1]
+
 
 X = np.arange(len(data)).reshape(-1, 1)
 
