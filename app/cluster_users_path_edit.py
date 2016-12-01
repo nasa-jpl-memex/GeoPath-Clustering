@@ -25,7 +25,7 @@ data = eval(line)
 
 phone_numbers = data.keys()
 list_location_encoded = []
-similarity_matrix = np.zeros((len(data),len(data)))
+
 
 # replace consecutive repeated locations with one
 for phone_number in phone_numbers:
@@ -95,8 +95,7 @@ def difflib_sim(i,j):
         return 0 
     
     s1, s2 = list_location_encoded[i], list_location_encoded[j]
-    
-    print 1 - difflib.SequenceMatcher(None,s1,s2).ratio(), s1, s2 
+     
     return 1 - difflib.SequenceMatcher(None,s1,s2).ratio()
     
 
@@ -114,7 +113,5 @@ print 'Number of unique cluster lables', len(np.unique(db.labels_))
 
 pickle.dump(db.labels_, open("./static/data/clusters_edit.p","w"), protocol=2)
 pickle.dump(phone_numbers, open("./static/data/phone_numbers_edit.p","w"), protocol=2)
-
-
 
 
