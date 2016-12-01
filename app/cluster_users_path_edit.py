@@ -12,6 +12,8 @@ Edit Dist : 1
 '''
 import numpy as np
 from sklearn.cluster import DBSCAN
+from sklearn.metrics.pairwise import pairwise_distances
+
 import cPickle as pickle
 
 # Test data
@@ -70,8 +72,12 @@ def edit_dist(i,j):
 
 
 X = np.arange(len(data)).reshape(-1, 1)
+similarity_matrix = pairwise_distances(X,metric=edit_dist, n_jobs=2)
 
-db = DBSCAN(metric=edit_dist, eps=1, min_samples=2, n_jobs=1).fit(X)  
+pickle.dump(similarity_matrix, open("./static/data/similarity_matrix_edit.p","w"), protocol=2)
+
+db = DBSCAN(eps=2, min_samples=2, metric='precomputed').fit(similarity_matrix)
+  
 print 'Number of unique cluster lables', len(np.unique(db.labels_))
 
 pickle.dump(db.labels_, open("./static/data/clusters_edit.p","w"), protocol=2)
