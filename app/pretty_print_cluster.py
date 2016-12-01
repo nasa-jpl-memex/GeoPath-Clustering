@@ -13,6 +13,5 @@ for idx,label in enumerate(labels):
     
     label_to_phone[label].append(phones[idx])
     
-print label_to_phone.values()
 
 pickle.dump(label_to_phone.values() , open("./static/data/clustered_phone_" + suffix + ".p","w"), protocol=2)
