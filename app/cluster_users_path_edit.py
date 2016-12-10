@@ -15,33 +15,17 @@ from sklearn.cluster import DBSCAN
 from sklearn.metrics.pairwise import pairwise_distances
 import difflib
 import cPickle as pickle
+from data_util import filter_data
 
 # Test data
-# data = { "ph1":["LA", "NYC", "Chicago"], "ph2":["LA","NYC","Seattle"], "ph3":["tst1","tst2","tst3"] }
+data = { "ph1":["LA", "NYC", "Chicago"], "ph2":["LA","NYC","Seattle"], "ph3":["tst1","tst2","tst3"] }
 
-line = open("phones_and_cities.json","r").readline()
-data = eval(line)
+# line = open("phones_and_cities.json","r").readline()
+# data = eval(line)
 
-
-phone_numbers = data.keys()
 list_location_encoded = []
 
-
-# replace consecutive repeated locations with one
-for phone_number in phone_numbers:
-    refined_location = []
-    prev_loc = ""
-    for loc in data[phone_number]:
-        if not prev_loc == loc:
-            refined_location.append(loc)
-        prev_loc=loc
-    
-    data[phone_number] = refined_location
-    
-#Remove phone_numbers with just one location
-for phone_number in phone_numbers:
-    if len(data[phone_number]) < 2:
-        del data[phone_number]
+data = filter_data(data)
 
 phone_numbers = data.keys()
 
@@ -89,6 +73,7 @@ def edit_dist(i,j):
     # Normalize distance w.r.t. to len(s1) to ensure similar result for varied length lists
     return (1.0 * distances[-1] / len(s1))
 
+
 def difflib_sim(i,j):
     i, j = int(i[0]), int(j[0])
     if i == j:
@@ -96,7 +81,12 @@ def difflib_sim(i,j):
     
     s1, s2 = list_location_encoded[i], list_location_encoded[j]
      
-    return 1 - difflib.SequenceMatcher(None,s1,s2).ratio()
+    score = 1 - difflib.SequenceMatcher(None,s1,s2).ratio()
+    
+    if score < 0.2:
+        unique_items.add(i)
+        unique_items.add(j) 
+    return score
     
 
 n_jobs = 2
@@ -113,5 +103,4 @@ print 'Number of unique cluster lables', len(np.unique(db.labels_))
 
 pickle.dump(db.labels_, open("./static/data/clusters_edit.p","w"), protocol=2)
 pickle.dump(phone_numbers, open("./static/data/phone_numbers_edit.p","w"), protocol=2)
-
 
