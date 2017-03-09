@@ -2,9 +2,11 @@
     body {
         height: 100%;
         width: 100%;
+        overflow: hidden;
     }
     body {
         margin: 0;
+        overflow: hidden;
     }
     #map {
         width: 100%;
@@ -185,9 +187,28 @@ path.link {
 }
 
 circle {
-	fill: rgba(245, 15, 15, 0.42);
+	fill: red;
+	stroke: black;
+	stroke-width: 1px;
 }
 
 circle:hover {
   fill: #ff0000;
+}
+
+.right{
+float:right;
+}
+
+.no_scroll{
+    overflow: hidden;
+}
+
+#phone_text{
+    color:white;
+}
+
+.full_height_width{
+    height:97%;
+    width: 100%;
 }

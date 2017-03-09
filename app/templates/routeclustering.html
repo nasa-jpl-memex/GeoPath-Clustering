@@ -33,66 +33,98 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <!--<li><a href="/phonelocator">Phone Locator <span class="sr-only">(current)</span></a></li>-->
         <li class="active"><a href="/routeclustering">Route Clustering</a></li>
         <li><a href="/cityclustering">Route Clustering by City</a></li>
+        <li><a href="/concurrent_phone_viewer">Route Clustering by City</a></li>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
 
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid full_height_width">
+    <div class="row full_height_width">
         <div class="col-md-1">
             <div id="sidebar-wrapper" style="background-color: rgba(0, 0, 0, 0.7); max-width: 100%; overflow-x: hidden;">
                 <ul class="sidebar-nav">
+                    <form action="">
+                        <input type="text" name="Search" value="" id="search_phone" placeholder="search for a phone number">
+                        <button type="button" class="btn btn-default" onclick="draw_routes(0)">Search</button>
+                    </form>
+                    <form action="">
+                        <input type="radio" name="gender" value="1" checked="checked" onclick="draw_routes(1)">  1
+                        <input type="radio" name="gender" value="2" onclick="draw_routes(2)" > 2
+                        <input type="radio" name="gender" value="3" onclick="draw_routes(3)"> 3
+                    </form>
                     <div class="input-group col-md-12" id="phone_place_holder">
                         <span id="cluster_phone" >No phone number found, click on paths</span>
-                    </div>    
+                    </div>
                 </ul>
             </div>
         </div>
-        <div class="col-md-10">
-            <div id="clusetring_map"></div>
-        </div>
-        <div class="col-md-1">
-            {% for code in all_codes %}
-                <a onclick="clickline({'code':['{{ code[0] }}']})">{{ code[1] }}</a><br>
-            {% endfor %}
-        </div>
+        <div class="col-md-10 full_height_width">
+            <div id="map" class="full_height_width"></div>
         </div>
     </div>
 </div>
+
 <script>
-var width = 960,
-    height = 960,
-    scale0 = (width - 1) / 2 / Math.PI;
-
-var projection = d3.geo.mercator();
-
-var path = d3.geo.path()
-    .projection(projection);
-
-var svg = d3.select("#clusetring_map").append("svg")
-    .attr("width", "100%")
-    .attr("height", height)
-  .append("g");
-
-var g = svg.append("g");
-
-svg.append("rect")
-    .attr("class", "overlay")
-    .attr("width", width)
-    .attr("height", height);
 
 
-var g = svg.append("g");
-var stateGroup = g.append('g');
-var arcGroup = g.append('g');
+var width = 960;
+var height = 960;
+var links = [];
+
+var map = L.map('map',{zoomControl: true}).setView([0, 0], 2);
+    mapLink =
+    '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+    L.tileLayer(
+    'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; ' + mapLink + ' Contributors',
+    maxZoom: 18,
+    }).addTo(map);
+    map.zoomControl.setPosition('topright');
+	map._initPathRoot()
+
+	var svg = d3.select("#map").select("svg");
+	var g = svg.append("g").attr("class", "leaflet-zoom-hide");
+	var arcGroup = g.append('g');
+
+
+var transform = d3.geo.transform({point: projectPoint}),
+    path = d3.geo.path().projection(transform);
+
+
+function projectPoint(x, y) {
+  var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+  this.stream.point(point.x, point.y);
+}
+
+
+
+function phone_mouseover(d){
+    cluster_routes = d3.selectAll(".arc")
+    for (i = 0; i < cluster_routes[0].length; i++) {
+       each_phone = cluster_routes[0][i].__data__.phone;
+       if (each_phone == d){
+            cluster_routes[0][i].style.stroke = "#ff0000";
+       }
+       else{
+        cluster_routes[0][i].style.strokeOpacity = "0.5";
+        cluster_routes[0][i].style.zIndex = "-7";
+       }
+    }
+}
+
+
+function phone_mouseout(){
+    d3.selectAll(".arc").style("stroke", "#a37009");
+    d3.selectAll(".arc").style("stroke-opacity", "1");
+    d3.selectAll(".arc").style("stroke-width", "3.5px");
+}
+
 
 function mouseover(d) {
     var code = d.code;
-    console.log(d3.selectAll("#"+code));
     d3.selectAll("#"+code).style("stroke", "#ff0000");
     d3.selectAll("#"+code).style("stroke-opacity", "1");
     d3.selectAll("#"+code).style("stroke-width", "3.5px");
@@ -100,62 +132,90 @@ function mouseover(d) {
 
 function mouseout(d) {
     var code = d.code;
-    d3.selectAll("#"+code).style("stroke", "#ffcc00");
-    d3.selectAll("#"+code).style("stroke-opacity", "0.2");
+    d3.selectAll("#"+code).style("stroke", "#a37009");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
     d3.selectAll("#"+code).style("stroke-width", "2px");
 }
 
 function clickline(d) {
     var code = d.code;
-    d3.selectAll("#"+code).style("stroke", "#ff0000");
+    var all_arcs = d3.selectAll(".arc");
+    for (i = 0; i < all_arcs[0].length; i++) {
+       var arc_id = all_arcs[0][i].id;
+       if (arc_id != code){
+            d3.selectAll("#"+arc_id).remove();
+       }
+    }
+    var tmp = []
+    for (i = 0; i < links.length; i++) {
+        var link_code = links[i]['code'][0];
+        if (link_code == code[0]){
+            tmp.push(links[i])
+        }
+    }
+    links = tmp;
+    d3.selectAll("#"+code).style("stroke", "#a37009");
     d3.selectAll("#"+code).style("stroke-opacity", "1");
     d3.selectAll("#"+code).style("stroke-width", "3.5px");
-    var lines = d3.selectAll("#"+"a666");
+    var lines = d3.selectAll("#"+code);
     var num_phones = lines[0].length;
     document.getElementById("phone_place_holder").innerHTML = "<span id='num_phones'>" + num_phones + " phone number found <span>";
     lines[0].forEach(function(entry){
-        document.getElementById("phone_place_holder").innerHTML += '<li id="cluster_phone">' + entry.attributes.value.value + '</li>';
+        document.getElementById("phone_place_holder").innerHTML += '<li id="cluster_phone" onmouseover=phone_mouseover(' + entry.attributes.value.value + ')  onmouseout=phone_mouseout()' +  '>' + entry.attributes.value.value + '</li>';
       })
 }
 
-d3.json("{{ data }}/world-110m.json", function(error, world) {
-  if (error) throw error;
 
-  stateGroup.append("path")
-      .datum(topojson.merge(world, world.objects.countries.geometries))
-      .attr("class", "land")
-      .attr("d", path);
+draw_routes(1)
 
-  g.append("path")
-      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
-      .attr("class", "boundary")
-      .attr("d", path);
-      
-    d3.csv("{{ data }}nasacenters.csv", function(error, d) {
-        var t = eval('{{cluster|tojson|safe}}');
-        var data = t;
-    
+function draw_routes(level){
+
+        var data = eval('{{cluster|tojson|safe}}');
         links = [];
-        for(var i=0, len=data.length; i<len; i++){
-            links.push({
-                type: "LineString",
-                coordinates: [
-                    [ data[i].lon1, data[i].lat1 ],
-                    [ data[i].lon2, data[i].lat2 ]
-                ],
-                code: data[i].code,
-                phone: data[i].phone,
-            });
+        if (level != 0 ){
+            for(var i=0, len=data.length; i<len; i++){
+                if (data[i].level == level){
+                    links.push({
+                        type: "LineString",
+                        coordinates: data[i].points,
+                        code: data[i].code,
+                        phone: data[i].phone,
+                        level: data[i].level
+                    });
+                  }
+            }
+         }else{
+             var phone = document.getElementById('search_phone').value;
+             var search_code_level = []
+             for(var i=0, len=data.length; i<len; i++){
+                    if (data[i].phone == phone){
+                        search_code_level.push({"code":data[i].code[0], "level":data[i].level});
+                    }
+             }
+         for(var s=0, len=search_code_level.length; s<len; s++){
+             if (search_code_level[s] !== undefined) {
+                 for(var i=0, len=data.length; i<len; i++){
+                    if (data[i].code == search_code_level[s]["code"]  && data[i].level == search_code_level[s]["level"]){
+                        links.push({
+                            type: "LineString",
+                            coordinates: data[i].points,
+                            code: data[i].code,
+                            phone: data[i].phone,
+                            level: data[i].level
+                        });
+                      }
+                 }
+           }
         }
+      }
 
-        var pathArcs = arcGroup.selectAll(".arc")
-            .data(links);
+        var pathArcs = arcGroup.selectAll(".arc").data(links);
 
         pathArcs.enter()
             .append("path")
             .attr({
                 'class': 'arc'
-            }).style({ 
+            }).style({
                 fill: 'none',
             })
             .on("mouseover", mouseover)
@@ -169,22 +229,48 @@ d3.json("{{ data }}/world-110m.json", function(error, world) {
                 d: path
             })
             .style({
-                stroke: '#ffcc00',
+                stroke: '#a37009',
                 "stroke-width": '2px',
-                "stroke-opacity": 0.2,
+                "stroke-opacity": 1,
             })
         pathArcs.exit().remove();
-    });
-});
+
+ } <!--end of draw_routes-->
 
 
-var zoom = d3.behavior.zoom()
-    .on("zoom",function() {
-        g.attr("transform","translate("+ 
-            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
-  });
 
-svg.call(zoom).call(zoom.event);
+
+map.on("viewreset", update);
+update();
+
+function update() {
+    d3.selectAll(".arc").remove();
+     var pathArcs = arcGroup.selectAll(".arc").data(links);
+
+        pathArcs.enter()
+            .append("path")
+            .attr({
+                'class': 'arc'
+            }).style({
+                fill: 'none',
+            })
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
+            .on("click", clickline);
+
+        d3.selectAll(".arc")
+          .attr({'id': function(d) { return d.code }})
+          .attr({'value': function(d) { return d.phone }});
+            pathArcs.attr({
+                d: path
+            })
+            .style({
+                stroke: '#a37009',
+                "stroke-width": '2px',
+                "stroke-opacity": 1,
+            })
+        pathArcs.exit().remove();
+    }
 
 
     </script>

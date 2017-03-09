@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <script src="{{ jquery }}"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" type="text/javascript"></script>
+    <script src="http://d3js.org/d3.geo.projection.v0.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ simple_sidebar }}">
+    <link rel="stylesheet" href="{{ app_css }}">
+    </head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">Memex</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <!--<li><a href="/phonelocator">Phone Locator <span class="sr-only">(current)</span></a></li>-->
+        <li><a href="/routeclustering">Route Clustering</a></li>
+        <li><a href="/cityclustering">Route Clustering by City</a></li>
+        <li class="active"><a href="/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container-fluid full_height_width" >
+    <div class="row full_height_width">
+        <div class="col-md-2" id="sidebar-wrapper" style="background-color: rgba(0, 0, 0, 0.7); max-width: 100%; overflow-x: hidden;">
+                <ul class="sidebar-nav">
+                    <div class="input-group col-md-12">
+                        <span>From:</span>
+                        <select id="start_date">
+                            {% for date in all_dates %}
+                            <option value="{{date}}" id="start_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                        <span>To:</span>
+                        <select id="end_date">
+                            {% for date in all_dates %}
+                            <option value="{{date}}" id="end_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn btn-default" onclick="query()">Query</button>
+                        <div id="list_results"></div>
+                    </div>
+                </ul>
+        </div>
+        <div class="col-md-10 right full_height_width">
+            <div id="map" class="full_height_width"></div>
+        </div>
+        </div>
+    </div>
+</div>
+<script>
+var map = L.map('map',{zoomControl: true}).setView([0, 0], 2);
+    mapLink =
+    '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+    L.tileLayer(
+    'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; ' + mapLink + ' Contributors',
+    maxZoom: 18,
+    }).addTo(map);
+    map.zoomControl.setPosition('topright');
+	/* Initialize the SVG layer */
+	map._initPathRoot()
+
+	/* We simply pick up the SVG from the map object */
+	var svg = d3.select("#map").select("svg"),
+	g = svg.append("g");
+
+var range = 100
+
+function query(){
+
+
+    var start_date = document.getElementById("start_date").value;
+    var end_date = document.getElementById("end_date").value;
+
+       $.ajax({
+          type: "POST",
+          url: "concurrent_phone_viewer/" + start_date + "_" + end_date + "/" + range ,
+          dataType: 'json',
+          success: function(phone_location) {
+          var unique_phones = phone_location['unique_phones']
+                for (i = 0; i < unique_phones.length; i++) {
+                   document.getElementById("list_results").innerHTML +=  "<p id='phone_text' onclick='query_one_phone(this ," + unique_phones[i][0] + ")'>" + unique_phones[i][0] + " : " +unique_phones[i][1] + "</p>";
+                 }
+          }
+        });
+    jQuery(function($)
+        {
+        document.getElementById("list_results").innerHTML = ""
+            $('#sidebar-wrapper').bind('scroll', function()
+            {
+                if($(this).scrollTop() + $(this).innerHeight()>=$(this)[0].scrollHeight)
+                    {
+                    range = range + 100
+                    $.ajax({
+                      type: "POST",
+                      url: "concurrent_phone_viewer/" + start_date + "_" + end_date + "/" + range,
+                      dataType: 'json',
+                      success: function(data) {
+                      var unique_phones = data['unique_phones']
+                            for (i = 0; i < unique_phones.length; i++) {
+                               document.getElementById("list_results").innerHTML +=  "<p id='phone_text' onclick='query_one_phone(this, " + unique_phones[i][0] + ")'>" + unique_phones[i][0] + " : " +unique_phones[i][1] + "</p>";
+                             }
+                      }
+                    });
+                }
+            })
+        }
+    );
+};
+
+ function query_one_phone(selected_phone, phone){
+    var x = document.getElementsByTagName("p");
+    for (var i = 0; i < x.length; i++) {
+        x[i].style.color = "white";
+    }
+
+    selected_phone.style.color = "#ed0b1e";
+    var start_date = document.getElementById("start_date").value;
+    var end_date = document.getElementById("end_date").value;
+
+       $.ajax({
+          type: "POST",
+          url: "concurrent_phone_viewer/query_one_phone/" + phone + "/" + start_date + "_" + end_date ,
+          dataType: 'json',
+          success: function(data) {
+          var phone_location = data['phone_location'];
+
+        phone_location.forEach(function(d) {
+			d.LatLng = new L.LatLng(d.circle.coordinates[0],
+									d.circle.coordinates[1])
+		})
+
+
+        d3.selectAll("circle").remove();
+		var feature = g.selectAll("circle")
+			.data(phone_location)
+			.enter().append("circle")
+			.style("stroke", "black")
+			.style("opacity", .6)
+			.style("fill", "red")
+			.attr("r", 10);
+
+        map.on("viewreset", update);
+		update();
+
+		function update() {
+			feature.attr("transform",
+			function(d) {
+				return "translate("+
+					map.latLngToLayerPoint(d.LatLng).x +","+
+					map.latLngToLayerPoint(d.LatLng).y +")";
+				}
+			)
+		}
+          }
+        });
+
+  }
+    </script>
+  </body>
+</html>
