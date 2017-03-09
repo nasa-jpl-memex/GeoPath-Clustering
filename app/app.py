@@ -10,7 +10,7 @@ SOLR_URL = "http://localhost:8983/solr"
 jquery = "static/js/jquery.js"
 simple_sidebar = "static/css/simple-sidebar.css"
 app_css = "static/css/app.css"
-
+sub_domain = ""
 
 @app.route("/routeclustering")
 def routeclustering():
@@ -36,7 +36,7 @@ def routeclustering():
     for i in range(0, num_codes, 2):
         all_codes.append([codes[i], codes[i+1]])
     
-    return render_template('routeclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, cluster=cluster, all_codes=all_codes)
+    return render_template('routeclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, cluster=cluster, all_codes=all_codes, sub_domain=sub_domain)
 
 
 
@@ -121,7 +121,7 @@ def cityclustering(find_city_state = None):
 
         return jsonify({"phones":phones, "found_phones":found_phones, "city":city})
 
-    return render_template('cityclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_cities=all_cities) # phones=phones,
+    return render_template('cityclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_cities=all_cities, sub_domain=sub_domain)
 
 
 @app.route("/concurrent_phone_viewer")
@@ -173,7 +173,7 @@ def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
         return  jsonify({"phone_location":phone_location})
 
 
-    return render_template('concurrent_phone_viewer.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_dates=all_dates, phone_location=phone_location)
+    return render_template('concurrent_phone_viewer.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_dates=all_dates, phone_location=phone_location, sub_domain=sub_domain)
 
 
 if __name__ == "__main__":
