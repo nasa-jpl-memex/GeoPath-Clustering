@@ -109,7 +109,7 @@ feature.on({
     "click":  function(d) {
         d3.selectAll(".arc").remove();
         var city_state = d['city_state']
-        var url='http://localhost:5000/cityclustering/' + city_state;
+        var url='{{sub_domain}}/cityclustering/' + city_state;
         $.getJSON(url, function(d) {
             var data = d['phones'];
             links = [];
