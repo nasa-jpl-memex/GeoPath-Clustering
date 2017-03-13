@@ -27,7 +27,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">Memex</a>
+      <a class="navbar-brand" href="/">Memex</a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -72,6 +72,7 @@
                         </select>
                     </div>
                     <br>
+                    <span id="num_phones"></span>
                     <div class="input-group col-md-12" id="phone_place_holder">
                         <span id="cluster_phone" >No phone number found, click on paths</span>
                     </div>
@@ -149,17 +150,17 @@ function phone_mouseout(){
 
 
 function mouseover(d) {
-    var code = d.code;
-    d3.selectAll("#"+code).style("stroke", "#ff0000");
-    d3.selectAll("#"+code).style("stroke-opacity", "1");
-    d3.selectAll("#"+code).style("stroke-width", "3.5px");
+    <!--var code = d.code;-->
+    <!--d3.selectAll("#"+code).style("stroke", "#ff0000");-->
+    <!--d3.selectAll("#"+code).style("stroke-opacity", "1");-->
+    <!--d3.selectAll("#"+code).style("stroke-width", "3.5px");-->
 }
 
 function mouseout(d) {
-    var code = d.code;
-    d3.selectAll("#"+code).style("stroke", "#a37009");
-    d3.selectAll("#"+code).style("stroke-opacity", "1");
-    d3.selectAll("#"+code).style("stroke-width", "2px");
+    <!--var code = d.code;-->
+    <!--d3.selectAll("#"+code).style("stroke", "#a37009");-->
+    <!--d3.selectAll("#"+code).style("stroke-opacity", "1");-->
+    <!--d3.selectAll("#"+code).style("stroke-width", "2px");-->
 }
 
 function clickline(d) {
@@ -179,15 +180,30 @@ function clickline(d) {
         }
     }
     links = tmp;
-    d3.selectAll("#"+code).style("stroke", "#a37009");
-    d3.selectAll("#"+code).style("stroke-opacity", "1");
-    d3.selectAll("#"+code).style("stroke-width", "3.5px");
+    var clicked_cluster = d3.selectAll("#"+code);
+    for (i = 0; i < clicked_cluster[0].length; i++) {
+        if (date<=end_date && date>=start_date){
+            clicked_cluster[0][i].style.stroke = "#09A370";
+        }else{
+            clicked_cluster[0][i].style.stroke = "#DC143C";
+        }
+        clicked_cluster[0][i].style.stroke = "#09A370";
+        <!--clicked_cluster[i].style("stroke", "#a37009");-->
+        <!--d3.selectAll("#"+code).style("stroke-opacity", "1");-->
+        <!--d3.selectAll("#"+code).style("stroke-width", "3.5px");-->
+    }
     var lines = d3.selectAll("#"+code);
-    var num_phones = lines[0].length;
-    document.getElementById("phone_place_holder").innerHTML = "<span id='num_phones'>" + num_phones + " phone number found <span>";
+
+    var tmp = [];
+    document.getElementById("phone_place_holder").innerHTML = "";
     lines[0].forEach(function(entry){
+        if (tmp.indexOf(entry.attributes.value.value) > -1){
+        }else{
         document.getElementById("phone_place_holder").innerHTML += '<li id="cluster_phone" onmouseover=phone_mouseover(' + entry.attributes.value.value + ')  onmouseout=phone_mouseout()' +  '>' + entry.attributes.value.value + '</li>';
+        tmp.push(entry.attributes.value.value);
+        }
       })
+      document.getElementById("num_phones").innerHTML = "<span id='num_phones'>" + tmp.length + " phone number found <span>";
 }
 
 var start_date = parseInt(document.getElementById("start_date").value);
@@ -204,50 +220,49 @@ $( "#date_picker" ).change(function() {
 
 function draw_routes(l){
         level = l
-        var data = eval('{{cluster|tojson|safe}}');
+        var cluster = eval('{{cluster|tojson|safe}}');
         links = [];
         if (level != 0 ){
-            for(var i=0, len=data.length; i<len; i++){
-                data[i].dates.sort();
-                var start_date_index = data[i].dates.indexOf(start_date);
-                var end_date_index = data[i].dates.indexOf(end_date);
-                if (data[i].level == l){
-                    for(var d=0, d_len=data[i].dates.length; d<d_len; d++){
-                        var date = data[i].dates[d]
-                        var date_index = data[i].dates.indexOf(date);
-
-                        if (date_index<=end_date_index && date_index>=start_date_index){
-                        console.log('date');
-                            links.push({
-                                type: "LineString",
-                                coordinates: data[i].points,
-                                code: data[i].code,
-                                phone: data[i].phone,
-                                level: data[i].level,
-                                date: data[i].dates
-                            });
+            for(var i=0, len=cluster.length; i<len; i++){
+                cluster[i].dates.sort();
+                if (cluster[i].level == l){
+                    var seg_in_date_range = false;
+                    for(var d=0, d_len=cluster[i].dates.length; d<d_len; d++){
+                        var date = cluster[i].dates[d];
+                        if (date<=end_date && date>=start_date){
+                            seg_in_date_range = true;
                         }
+                    }
+                    if (seg_in_date_range){
+                        links.push({
+                            type: "LineString",
+                            coordinates: cluster[i].points,
+                            code: cluster[i].code,
+                            phone: cluster[i].phone,
+                            level: cluster[i].level,
+                            date: cluster[i].dates
+                        });
                     }
                   }
             }
          }else{
              var phone = document.getElementById('search_phone').value;
              var search_code_level = []
-             for(var i=0, len=data.length; i<len; i++){
-                    if (data[i].phone == phone){
-                        search_code_level.push({"code":data[i].code[0], "level":data[i].level});
+             for(var i=0, len=cluster.length; i<len; i++){
+                    if (cluster[i].phone == phone){
+                        search_code_level.push({"code":cluster[i].code[0], "level":cluster[i].level});
                     }
              }
          for(var s=0, len=search_code_level.length; s<len; s++){
              if (search_code_level[s] !== undefined) {
-                 for(var i=0, len=data.length; i<len; i++){
-                    if (data[i].code == search_code_level[s]["code"]  && data[i].level == search_code_level[s]["level"]){
+                 for(var i=0, len=cluster.length; i<len; i++){
+                    if (cluster[i].code == search_code_level[s]["code"]  && cluster[i].level == search_code_level[s]["level"]){
                         links.push({
                             type: "LineString",
-                            coordinates: data[i].points,
-                            code: data[i].code,
-                            phone: data[i].phone,
-                            level: data[i].level
+                            coordinates: cluster[i].points,
+                            code: cluster[i].code,
+                            phone: cluster[i].phone,
+                            level: cluster[i].level
                         });
                       }
                  }
@@ -268,7 +283,10 @@ function draw_routes(l){
             .on("mouseout", mouseout)
             .on("click", clickline);
 
-        d3.selectAll(".arc")
+        var all_paths = d3.selectAll(".arc");
+        console.log(all_paths[0][0]);
+        console.log(all_paths);
+        all_paths
           .attr({'id': function(d) { return d.code }})
           .attr({'value': function(d) { return d.phone }});
             pathArcs.attr({

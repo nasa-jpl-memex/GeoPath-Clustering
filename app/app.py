@@ -12,6 +12,11 @@ simple_sidebar = "static/css/simple-sidebar.css"
 app_css = "static/css/app.css"
 sub_domain = ""
 
+
+@app.route("/")
+def index():
+    return render_template('index.html', app_css=app_css)
+
 @app.route("/routeclustering")
 def routeclustering():
     all_dates = []

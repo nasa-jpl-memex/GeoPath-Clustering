@@ -221,3 +221,28 @@ float:right;
 #date_picker_city_clusetring{
    display: none;
 }
+
+.container{
+    margin-top: 100px;
+}
+
+#content{
+    height: 100%;
+    /*margin-top: 5%;*/
+}
+
+.gray_tin_border{
+    border-width: 1px;
+    border-style: solid;
+    border-color: gray;
+}
+
+.index_images{
+    width: 80%;
+}
+
+.center{
+text-align: center;
+margin-right:auto;
+margin-left:auto;
+}
