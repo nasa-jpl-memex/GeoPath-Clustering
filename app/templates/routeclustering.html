@@ -105,9 +105,9 @@ var map = L.map('map',{zoomControl: true}).setView([30, -30], 2);
     map.zoomControl.setPosition('topright');
 	map._initPathRoot()
 
-	var svg = d3.select("#map").select("svg");
-	var g = svg.append("g").attr("class", "leaflet-zoom-hide");
-	var arcGroup = g.append('g');
+var svg = d3.select("#map").select("svg");
+var g = svg.append("g").attr("class", "leaflet-zoom-hide");
+var arcGroup = g.append('g');
 
 
 var transform = d3.geo.transform({point: projectPoint}),
@@ -135,14 +135,14 @@ function phone_mouseover(d){
             cluster_routes[0][i].style.stroke = "#ff0000";
        }
        else{
-        cluster_routes[0][i].style.strokeOpacity = "0.5";
+        cluster_routes[0][i].style.strokeOpacity = "0.2";
        }
     }
 }
 
 
 function phone_mouseout(){
-    d3.selectAll(".arc").style("stroke", "#a37009");
+    d3.selectAll(".arc").style("stroke", "#224be2");
     d3.selectAll(".arc").style("stroke-opacity", "1");
     d3.selectAll(".arc").style("stroke-width", "2px");
 }
@@ -150,17 +150,17 @@ function phone_mouseout(){
 
 
 function mouseover(d) {
-    <!--var code = d.code;-->
-    <!--d3.selectAll("#"+code).style("stroke", "#ff0000");-->
-    <!--d3.selectAll("#"+code).style("stroke-opacity", "1");-->
-    <!--d3.selectAll("#"+code).style("stroke-width", "3.5px");-->
+    var code = d.code;
+    d3.selectAll("#"+code).style("stroke", "#ff0000");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "3.5px");
 }
 
 function mouseout(d) {
-    <!--var code = d.code;-->
-    <!--d3.selectAll("#"+code).style("stroke", "#a37009");-->
-    <!--d3.selectAll("#"+code).style("stroke-opacity", "1");-->
-    <!--d3.selectAll("#"+code).style("stroke-width", "2px");-->
+    var code = d.code;
+    d3.selectAll("#"+code).style("stroke", "#224be2");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "2px");
 }
 
 function clickline(d) {
@@ -180,18 +180,9 @@ function clickline(d) {
         }
     }
     links = tmp;
-    var clicked_cluster = d3.selectAll("#"+code);
-    for (i = 0; i < clicked_cluster[0].length; i++) {
-        if (date<=end_date && date>=start_date){
-            clicked_cluster[0][i].style.stroke = "#09A370";
-        }else{
-            clicked_cluster[0][i].style.stroke = "#DC143C";
-        }
-        clicked_cluster[0][i].style.stroke = "#09A370";
-        <!--clicked_cluster[i].style("stroke", "#a37009");-->
-        <!--d3.selectAll("#"+code).style("stroke-opacity", "1");-->
-        <!--d3.selectAll("#"+code).style("stroke-width", "3.5px");-->
-    }
+    d3.selectAll("#"+code).style("stroke", "#224be2");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "3.5px");
     var lines = d3.selectAll("#"+code);
 
     var tmp = [];
@@ -284,8 +275,6 @@ function draw_routes(l){
             .on("click", clickline);
 
         var all_paths = d3.selectAll(".arc");
-        console.log(all_paths[0][0]);
-        console.log(all_paths);
         all_paths
           .attr({'id': function(d) { return d.code }})
           .attr({'value': function(d) { return d.phone }});
@@ -293,7 +282,7 @@ function draw_routes(l){
                 d: path
             })
             .style({
-                stroke: '#a37009',
+                stroke: '#224be2',
                 "stroke-width": '2px',
                 "stroke-opacity": 1,
             })
@@ -329,7 +318,7 @@ function update() {
                 d: path
             })
             .style({
-                stroke: '#a37009',
+                stroke: '#224be2',
                 "stroke-width": '2px',
                 "stroke-opacity": 1,
             })
