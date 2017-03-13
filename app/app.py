@@ -15,7 +15,7 @@ sub_domain = ""
 
 @app.route("/")
 def index():
-    return render_template('index.html', app_css=app_css)
+    return render_template('index.html', app_css=app_css, sub_domain=sub_domain)
 
 @app.route("/routeclustering")
 def routeclustering():
