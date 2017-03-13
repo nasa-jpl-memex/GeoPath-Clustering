@@ -14,6 +14,15 @@ sub_domain = ""
 
 @app.route("/routeclustering")
 def routeclustering():
+    all_dates = []
+    url = "{0}/{1}/select?q=*%3A*&fl=date&wt=json&indent=true&facet=true&facet.field=date".format(SOLR_URL, "raw_data")
+    r = requests.get(url)
+    response = r.json()
+    dates = response['facet_counts']['facet_fields']['date']
+    for i in range(0, len(dates), 2):
+        all_dates.append(dates[i])
+    all_dates.sort()
+
     url = "{0}/{1}/select?q=*%3A*&wt=json&indent=true&rows=2147483647".format(SOLR_URL, "test")
     r = requests.get(url)
     response = r.json()
@@ -21,10 +30,13 @@ def routeclustering():
     cluster = []
     for doc in docs:
         points = []
-        for i in range(0, len(doc['points']), 2):
-                points.append([doc['points'][i], doc['points'][i+1]])
+        dates = []
+        for each in doc['points']:
+            data = eval(each)
+            points.append([data[0], data[1]])
+            dates.append(data[2])#data[2] is date for each segment
             #level here means number of common segments between routes
-        cluster.append({"code":doc['code'], "points":points, "phone":str(doc['phone'][0]), "level":doc['level'][0]})
+        cluster.append({"code":doc['code'], "points":points, "phone":str(doc['phone'][0][1:]), "level":doc['level'][0], "dates":list(set(dates))})
 
 
     url = "{0}/{1}/select?q=*%3A*&fl=code&wt=json&indent=true&facet=true&facet.field=code&rows=2147483647".format(SOLR_URL, "clustered_routes")
@@ -36,13 +48,22 @@ def routeclustering():
     for i in range(0, num_codes, 2):
         all_codes.append([codes[i], codes[i+1]])
     
-    return render_template('routeclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, cluster=cluster, all_codes=all_codes, sub_domain=sub_domain)
+    return render_template('routeclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, cluster=cluster, all_codes=all_codes, sub_domain=sub_domain, all_dates=all_dates)
 
 
 
 @app.route("/cityclustering")
 @app.route("/cityclustering/<find_city_state>")
 def cityclustering(find_city_state = None):
+    all_dates = []
+    url = "{0}/{1}/select?q=*%3A*&fl=date&wt=json&indent=true&facet=true&facet.field=date".format(SOLR_URL, "raw_data")
+    r = requests.get(url)
+    response = r.json()
+    dates = response['facet_counts']['facet_fields']['date']
+    for i in range(0, len(dates), 2):
+        all_dates.append(dates[i])
+    all_dates.sort()
+
     url = "{0}/{1}/select?q=*%3A*&fl=city_state%2Clocation&wt=json&indent=true&facet=true&facet.field=city_state&rows=2147483647".format(SOLR_URL, "raw_data")
     r = requests.get(url)
     response = r.json()
@@ -102,26 +123,26 @@ def cityclustering(find_city_state = None):
                         status = "from"
                         city = data[0]['city']
                         phones.append({"code":'a'+str(i), "lat1":str(data[0]['location'][0]), "lon1":str(data[0]['location'][1]), "lat2":str(data[1]['location'][0]),
-                                   "lon2":str(data[1]['location'][1]), "phone":phone, "status":status})
-                        found_phones.append([{'phone': phone, 'date':d, 'status': status}])
+                                   "lon2":str(data[1]['location'][1]), "phone":phone[1:], "status":status})
+                        found_phones.append([{'phone': phone[1:], 'date':d, 'status': status}])
                     else:
                         status = "to"
                         city = data[city_phone_index]['city']
                         phones.append({"code":'a'+str(i), "lat1":str(data[city_phone_index]['location'][0]), "lon1":str(data[city_phone_index]['location'][1]), "lat2":str(data[city_phone_index - 1]['location'][0]),
-                                   "lon2":str(data[city_phone_index - 1]['location'][1]), "phone":phone, "status":status})
-                        found_phones.append([{'phone': phone, 'date':d, 'status': status}])
+                                   "lon2":str(data[city_phone_index - 1]['location'][1]), "phone":phone[1:], "status":status})
+                        found_phones.append([{'phone': phone[1:], 'date':d, 'status': status}])
                         try:
                             status = "from"
                             city = data[city_phone_index]['city']
                             phones.append({"code":'a'+str(i), "lat1":str(data[city_phone_index]['location'][0]), "lon1":str(data[city_phone_index]['location'][1]), "lat2":str(data[city_phone_index + 1]['location'][0]),
-                                   "lon2":str(data[city_phone_index + 1]['location'][1]), "phone":phone, "status":status})
-                            found_phones.append([{'phone': phone, 'date':d, 'status': status}])
+                                   "lon2":str(data[city_phone_index + 1]['location'][1]), "phone":phone[1:], "status":status})
+                            found_phones.append([{'phone': phone[1:], 'date':d, 'status': status}])
                         except:
                             pass
 
         return jsonify({"phones":phones, "found_phones":found_phones, "city":city})
 
-    return render_template('cityclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_cities=all_cities, sub_domain=sub_domain)
+    return render_template('cityclustering.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_cities=all_cities, sub_domain=sub_domain, all_dates=all_dates)
 
 
 @app.route("/concurrent_phone_viewer")
@@ -135,6 +156,7 @@ def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
     dates = response['facet_counts']['facet_fields']['date']
     for i in range(0, len(dates), 2):
         all_dates.append(dates[i])
+    all_dates.sort()
 
 
     end_range = int(end_range)
@@ -151,7 +173,7 @@ def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
         docs = response['response']['docs']
         t = []
         for doc in docs:
-            t.append(doc['phone'][0])
+            t.append(doc['phone'][0][1:])
         unique_phones = []
         tmp = Counter(t)
         for each in tmp:

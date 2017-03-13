@@ -35,7 +35,7 @@
       <ul class="nav navbar-nav">
         <li class="active"><a href="{{sub_domain}}/routeclustering">Route Clustering</a></li>
         <li><a href="{{sub_domain}}/cityclustering">Route Clustering by City</a></li>
-        <li><a href="{{sub_domain}}/concurrent_phone_viewer">Route Clustering by City</a></li>
+        <li><a href="{{sub_domain}}/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
@@ -50,14 +50,32 @@
                         <input type="text" name="Search" value="" id="search_phone" placeholder="search for a phone number">
                         <button type="button" class="btn btn-default" onclick="draw_routes(0)">Search</button>
                     </form>
-                    <form action="">
+                    <span class="white">Cluster similarity:</span>
+                    <form action="" class="white">
                         <input type="radio" name="gender" value="1" checked="checked" onclick="draw_routes(1)">  1
                         <input type="radio" name="gender" value="2" onclick="draw_routes(2)" > 2
                         <input type="radio" name="gender" value="3" onclick="draw_routes(3)"> 3
                     </form>
+                    <br>
+                    <div id="date_picker">
+                        <span class="white">From:</span>
+                        <select id="start_date">
+                            {% for date in all_dates %}
+                            <option value="{{date}}" id="start_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="white">To:</span>
+                        <select id="end_date">
+                            {% for date in all_dates|reverse %}
+                            <option value="{{date}}" id="end_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <br>
                     <div class="input-group col-md-12" id="phone_place_holder">
                         <span id="cluster_phone" >No phone number found, click on paths</span>
                     </div>
+                    <div id="list_results"></div>
                 </ul>
             </div>
         </div>
@@ -73,8 +91,9 @@
 var width = 960;
 var height = 960;
 var links = [];
+var level = 1;
 
-var map = L.map('map',{zoomControl: true}).setView([0, 0], 2);
+var map = L.map('map',{zoomControl: true}).setView([30, -30], 2);
     mapLink =
     '<a href="http://openstreetmap.org">OpenStreetMap</a>';
     L.tileLayer(
@@ -100,9 +119,15 @@ function projectPoint(x, y) {
 }
 
 
+d3.selection.prototype.moveToFront = function() {
+      return this.each(function(){
+  this.parentNode.appendChild(this);
+  });
+ }
+
 
 function phone_mouseover(d){
-    cluster_routes = d3.selectAll(".arc")
+    cluster_routes = d3.selectAll(".arc");
     for (i = 0; i < cluster_routes[0].length; i++) {
        each_phone = cluster_routes[0][i].__data__.phone;
        if (each_phone == d){
@@ -110,7 +135,6 @@ function phone_mouseover(d){
        }
        else{
         cluster_routes[0][i].style.strokeOpacity = "0.5";
-        cluster_routes[0][i].style.zIndex = "-7";
        }
     }
 }
@@ -119,8 +143,9 @@ function phone_mouseover(d){
 function phone_mouseout(){
     d3.selectAll(".arc").style("stroke", "#a37009");
     d3.selectAll(".arc").style("stroke-opacity", "1");
-    d3.selectAll(".arc").style("stroke-width", "3.5px");
+    d3.selectAll(".arc").style("stroke-width", "2px");
 }
+
 
 
 function mouseover(d) {
@@ -165,23 +190,44 @@ function clickline(d) {
       })
 }
 
+var start_date = parseInt(document.getElementById("start_date").value);
+var end_date = parseInt(document.getElementById("end_date").value);
 
-draw_routes(1)
+draw_routes(level)
 
-function draw_routes(level){
+$( "#date_picker" ).change(function() {
+    start_date = parseInt(document.getElementById("start_date").value);
+    end_date = parseInt(document.getElementById("end_date").value);
+    draw_routes(level)
+});
 
+
+function draw_routes(l){
+        level = l
         var data = eval('{{cluster|tojson|safe}}');
         links = [];
         if (level != 0 ){
             for(var i=0, len=data.length; i<len; i++){
-                if (data[i].level == level){
-                    links.push({
-                        type: "LineString",
-                        coordinates: data[i].points,
-                        code: data[i].code,
-                        phone: data[i].phone,
-                        level: data[i].level
-                    });
+                data[i].dates.sort();
+                var start_date_index = data[i].dates.indexOf(start_date);
+                var end_date_index = data[i].dates.indexOf(end_date);
+                if (data[i].level == l){
+                    for(var d=0, d_len=data[i].dates.length; d<d_len; d++){
+                        var date = data[i].dates[d]
+                        var date_index = data[i].dates.indexOf(date);
+
+                        if (date_index<=end_date_index && date_index>=start_date_index){
+                        console.log('date');
+                            links.push({
+                                type: "LineString",
+                                coordinates: data[i].points,
+                                code: data[i].code,
+                                phone: data[i].phone,
+                                level: data[i].level,
+                                date: data[i].dates
+                            });
+                        }
+                    }
                   }
             }
          }else{

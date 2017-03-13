@@ -212,3 +212,12 @@ float:right;
     height:97%;
     width: 100%;
 }
+
+.white{
+    color: #ffffff;
+}
+
+
+#date_picker_city_clusetring{
+   display: none;
+}

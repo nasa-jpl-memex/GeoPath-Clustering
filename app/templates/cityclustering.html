@@ -46,9 +46,24 @@
     <div class="row full_height_width">
         <div class="col-md-2" id="sidebar-wrapper" style="background-color: rgba(0, 0, 0, 0.7); max-width: 100%; overflow-x: hidden;">
                 <ul class="sidebar-nav">
+
+                    <div id="date_picker_city_clusetring">
+                        <span class="white">From:</span>
+                        <select id="start_date">
+                            {% for date in all_dates %}
+                            <option value="{{date}}" id="start_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="white">To:</span>
+                        <select id="end_date">
+                            {% for date in all_dates|reverse %}
+                            <option value="{{date}}" id="end_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="input-group col-md-12" id="phone_place_holder">
                         <span id="cluster_phone">No phone number found, click on cities</span>
-                    </div>    
+                    </div>
                 </ul>
         </div>
         <div class="col-md-12 full_height_width">
@@ -59,7 +74,7 @@
 </div>
 <script>
 
-var map = L.map('map',{zoomControl: true}).setView([0, 0], 2);
+var map = L.map('map',{zoomControl: true}).setView([30, -30], 2);
     mapLink =
     '<a href="http://openstreetmap.org">OpenStreetMap</a>';
     L.tileLayer(
@@ -94,6 +109,11 @@ data.forEach(function(d) {
 })
 
 
+
+var radius = d3.scale.sqrt()
+    .domain([0, 1e4])
+    .range([0, 20]);
+
 d3.selectAll("circle").remove();
 var feature = g.selectAll("circle")
     .data(data)
@@ -101,34 +121,77 @@ var feature = g.selectAll("circle")
     .style("stroke", "black")
     .style("opacity", .6)
     .style("fill", "red")
-    .attr("r", 10);
+    .attr("r",  function(d) {return radius(d.size) });
 
 var links = [];
+var json;
 
-feature.on({
-    "click":  function(d) {
-        d3.selectAll(".arc").remove();
-        var city_state = d['city_state']
-        var url='{{sub_domain}}/cityclustering/' + city_state;
-        $.getJSON(url, function(d) {
-            var data = d['phones'];
+
+d3.selection.prototype.moveToFront = function() {
+      return this.each(function(){
+  this.parentNode.appendChild(this);
+  });
+ }
+
+
+
+function phone_mouseover(d){
+var elem = d3.select("path#"+d);
+    console.log(elem);
+     elem.style("stroke", "#DC143C");
+     elem.style("stroke-width", "5px");
+      elem.moveToFront();
+    }
+
+
+function phone_mouseout(d, status){
+        var elem = d3.select("path#"+d);
+        elem.style("stroke-width", "3.5px");
+        if (status == "from"){
+            elem.style("stroke", "#ffcc00");
+        } else {
+            elem.style("stroke", "#00FFFF");
+        }
+}
+
+
+var start_date = parseInt(document.getElementById("start_date").value);
+var end_date = parseInt(document.getElementById("end_date").value);
+
+$("#date_picker_city_clusetring").change(function() {
+    start_date = parseInt(document.getElementById("start_date").value);
+    end_date = parseInt(document.getElementById("end_date").value);
+    show_data(json);
+});
+
+
+function show_data(json){
+    d3.selectAll(".arc").remove();
+            var data = json['phones'];
             links = [];
+            var found_phones = [];
             for(var i=0, len=data.length; i<len; i++){
-                links.push({
-                    type: "LineString",
-                    coordinates: [
-                        [ data[i].lon1, data[i].lat1 ],
-                        [ data[i].lon2, data[i].lat2 ]
-                    ],
-                    code: data[i].code,
-                    phone: data[i].phone,
-                    status: data[i].status
-                });
+                date = json['found_phones'][i][0]['date'];
+                if (date >= start_date && date <= end_date){
+                found_phones.push(json['found_phones'][i]);
+                    links.push({
+                        type: "LineString",
+                        coordinates: [
+                            [ data[i].lon1, data[i].lat1 ],
+                            [ data[i].lon2, data[i].lat2 ]
+                        ],
+                        code: data[i].code,
+                        phone: data[i].phone,
+                        date: date,
+                        status: data[i].status
+                    });
+                }
             }
             var pathArcs = selectedArcGroup.selectAll(".selectedarc").data(links);
             pathArcs.enter()
                 .append("path")
                 .attr({'class': 'arc'})
+                .attr({'id': function(d) {return  d.status + d.phone + d.date}})
                 .style({fill: 'none',})
             d3.selectAll(".selectedarc")
                 .attr({'value': function(d) { return d.phone }});
@@ -142,16 +205,27 @@ feature.on({
                 } , "stroke-width": '2px', "stroke-opacity": 1})
             pathArcs.exit().remove();
 
-
-
-                var found_phones = d['found_phones'];
-                var city = d['city'];
+                var city = json['city'];
                 document.getElementById("cluster_phone").innerHTML = found_phones.length + ' phone numbers for ' + city + "<br>";
                 document.getElementById("cluster_phone").innerHTML += "<span style='color:#ffcc00'> Entering </span>" + " " + "<span style='color:#00FFFF'> Exiting </span>";
                 found_phones.forEach(function(entry){
-                    document.getElementById("cluster_phone").innerHTML += '<li id="cluster_phone">' + entry[0]['phone'] + " (" + entry[0]['date']  + ') ' + entry[0]['status'] + '</li>';
+                    document.getElementById("cluster_phone").innerHTML += '<li id="cluster_phone" onmouseover=phone_mouseover(\'' +  entry[0]['status'] + entry[0]['phone'] + entry[0]['date'] + '\')  onmouseout=phone_mouseout(\'' +  entry[0]['status'] + entry[0]['phone'] + entry[0]['date'] + ',' + entry[0]['status'] + '\') >' + entry[0]['phone'] + " (" + entry[0]['date']  + ') ' + entry[0]['status'] + '</li>';
                 })
-                }); <!--end of getJSON-->
+
+
+}
+
+feature.on({
+    "click":  function(d) {
+    document.getElementById("cluster_phone").innerHTML = "Loading ...";
+        d3.selectAll(".arc").remove();
+        var city_state = d['city_state']
+        var url='{{sub_domain}}/cityclustering/' + city_state;
+        $.getJSON(url, function(j) {
+            json = j;
+            document.getElementById("date_picker_city_clusetring").style.display = "block";
+            show_data(j)
+        });
      }
 });
 
@@ -173,6 +247,7 @@ function update() {
             pathArcs.enter()
                 .append("path")
                 .attr({'class': 'arc'})
+                .attr({'id': function(d) {return  d.status + d.phone + d.date}})
                 .style({fill: 'none',})
             d3.selectAll(".selectedarc")
                 .attr({'value': function(d) { return d.phone }});

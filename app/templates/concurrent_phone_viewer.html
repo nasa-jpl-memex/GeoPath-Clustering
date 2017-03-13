@@ -47,19 +47,23 @@
         <div class="col-md-2" id="sidebar-wrapper" style="background-color: rgba(0, 0, 0, 0.7); max-width: 100%; overflow-x: hidden;">
                 <ul class="sidebar-nav">
                     <div class="input-group col-md-12">
-                        <span>From:</span>
+                        <span class="white">From:</span>
                         <select id="start_date">
                             {% for date in all_dates %}
                             <option value="{{date}}" id="start_date")>{{date}}</option>
                             {% endfor %}
                         </select>
-                        <span>To:</span>
+                        <span class="white">To:</span>
                         <select id="end_date">
-                            {% for date in all_dates %}
+                            {% for date in all_dates|reverse %}
                             <option value="{{date}}" id="end_date")>{{date}}</option>
                             {% endfor %}
                         </select>
                         <button type="button" class="btn btn-default" onclick="query()">Query</button>
+                        <form action="">
+                            <input type="text" name="Search" value="" id="search_phone" placeholder="search for a phone number">
+                            <button type="button" class="btn btn-default" onclick="draw_routes(0)">Search</button>
+                        </form>
                         <div id="list_results"></div>
                     </div>
                 </ul>
@@ -71,7 +75,7 @@
     </div>
 </div>
 <script>
-var map = L.map('map',{zoomControl: true}).setView([0, 0], 2);
+var map = L.map('map',{zoomControl: true}).setView([30, -30], 2);
     mapLink =
     '<a href="http://openstreetmap.org">OpenStreetMap</a>';
     L.tileLayer(
