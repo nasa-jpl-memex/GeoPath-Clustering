@@ -189,10 +189,10 @@ def concurrent_phone_viewer(search=None, start_end_date=None, end_range=100, pho
 
 
     if start_end_date and phone and search=="search":
-        print "search"
         start_date = start_end_date.split("_")[0]
         end_date = start_end_date.split("_")[1]
-        url = "{0}/{1}/select?q=*{2}*&fq=date%3D%22{3}%22TO%22{4}%22&fl=phone&wt=json&indent=true&rows=2147483647".format(SOLR_URL, "raw_data", phone, start_date, end_date)
+        url = "{0}/{1}/select?q=*{2}*&fq=date%3D%5B%22{3}%22+TO+%22{4}%22%5D&fl=phone&wt=json&indent=true&rows=2147483647".format(SOLR_URL, "raw_data", phone, start_date, end_date)
+        print url
         r = requests.get(url)
         response = r.json()
         docs = response['response']['docs']
