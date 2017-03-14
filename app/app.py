@@ -153,7 +153,8 @@ def cityclustering(find_city_state = None):
 @app.route("/concurrent_phone_viewer")
 @app.route("/concurrent_phone_viewer/<start_end_date>/<end_range>",  methods=['GET', 'POST'])
 @app.route("/concurrent_phone_viewer/query_one_phone/<phone>/<start_end_date>",  methods=['GET', 'POST'])
-def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
+@app.route("/concurrent_phone_viewer/query_one_phone/<search>/<phone>/<start_end_date>",  methods=['GET', 'POST'])
+def concurrent_phone_viewer(search=None, start_end_date=None, end_range=100, phone=None):
     all_dates = []
     url = "{0}/{1}/select?q=*%3A*&fl=date&wt=json&indent=true&facet=true&facet.field=date".format(SOLR_URL, "raw_data")
     r = requests.get(url)
@@ -163,12 +164,12 @@ def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
         all_dates.append(dates[i])
     all_dates.sort()
 
-
     end_range = int(end_range)
     if end_range == 100:
         start_range = 0
     else:
         start_range = end_range - 100
+
     if start_end_date and not phone:
         start_date = start_end_date.split("_")[0]
         end_date = start_end_date.split("_")[1]
@@ -186,6 +187,26 @@ def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
         unique_phones = sorted(unique_phones, key=itemgetter(1), reverse=True)
         return  jsonify({"unique_phones":unique_phones[start_range:end_range]})
 
+
+    if start_end_date and phone and search=="search":
+        print "search"
+        start_date = start_end_date.split("_")[0]
+        end_date = start_end_date.split("_")[1]
+        url = "{0}/{1}/select?q=*{2}*&fq=date%3D%22{3}%22TO%22{4}%22&fl=phone&wt=json&indent=true&rows=2147483647".format(SOLR_URL, "raw_data", phone, start_date, end_date)
+        r = requests.get(url)
+        response = r.json()
+        docs = response['response']['docs']
+        t = []
+        for doc in docs:
+            t.append(doc['phone'][0][1:])
+        unique_phones = []
+        tmp = Counter(t)
+        for each in tmp:
+            unique_phones.append([each, tmp[each]])
+        unique_phones = sorted(unique_phones, key=itemgetter(1), reverse=True)
+        return  jsonify({"unique_phones":unique_phones[start_range:end_range]})
+
+
     phone_location = []
     if phone and start_end_date:
         start_date = start_end_date.split("_")[0]
@@ -198,7 +219,6 @@ def concurrent_phone_viewer(start_end_date=None, end_range=100, phone=None):
             phone_location.append({'phone':phone, "circle":{"coordinates":[doc['location'][0],doc['location'][1]]}})
 
         return  jsonify({"phone_location":phone_location})
-
 
     return render_template('concurrent_phone_viewer.html', jquery=jquery, simple_sidebar=simple_sidebar, app_css=app_css, all_dates=all_dates, phone_location=phone_location, sub_domain=sub_domain)
 

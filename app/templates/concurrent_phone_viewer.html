@@ -62,7 +62,7 @@
                         <button type="button" class="btn btn-default" onclick="query()">Query</button>
                         <form action="">
                             <input type="text" name="Search" value="" id="search_phone" placeholder="search for a phone number">
-                            <button type="button" class="btn btn-default" onclick="draw_routes(0)">Search</button>
+                            <button type="button" class="btn btn-default" onclick="phone_search()">Search</button>
                         </form>
                         <div id="list_results"></div>
                     </div>
@@ -182,6 +182,24 @@ function query(){
           }
         });
 
+  }
+
+  function phone_search(){
+         var phone = document.getElementById('search_phone').value;
+         var start_date = document.getElementById("start_date").value;
+         var end_date = document.getElementById("end_date").value;
+         document.getElementById("list_results").innerHTML = "";
+         $.ajax({
+          type: "POST",
+          url: "concurrent_phone_viewer/query_one_phone/search/" + phone + "/" + start_date + "_" + end_date ,
+          dataType: 'json',
+          success: function(data) {
+                      var unique_phones = data['unique_phones']
+                            for (i = 0; i < unique_phones.length; i++) {
+                               document.getElementById("list_results").innerHTML +=  "<p id='phone_text' onclick='query_one_phone(this, " + unique_phones[i][0] + ")'>" + unique_phones[i][0] + " : " +unique_phones[i][1] + "</p>";
+                             }
+                      }
+		})
   }
     </script>
   </body>
