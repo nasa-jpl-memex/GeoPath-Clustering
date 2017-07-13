@@ -1,13 +1,16 @@
     html,
     body {
-        width: 100%;
         height: 100%;
+        width: 100%;
+        overflow: hidden;
     }
     body {
         margin: 0;
+        overflow: hidden;
     }
     #map {
         width: 100%;
+        height: 100%;
     }
     svg {
         position: relative;
@@ -207,13 +210,8 @@ float:right;
 
 .full_height_width{
     height:97%;
-    /*width: 100%;*/
+    width: 100%;
 }
-
-full_height{
-    height:100%;
-}
-
 
 .white{
     color: #ffffff;
@@ -247,84 +245,4 @@ full_height{
 text-align: center;
 margin-right:auto;
 margin-left:auto;
-}
-
-.breathing-space{
-    margin: 20px 0;
-}
-
-.internal-space{
-    padding:20px;
-}
-
-.remove-space{
-    margin:0;
-    padding:0;
-}
-.textfields{
-    width:100%; 
-    border-width: 0; 
-    border-bottom-width: 1px;
-    /*background: #2f9fff;
-    color: #fff;*/
-}
-
-.sidebar{
-    -webkit-box-shadow: 2px 1px 10px 0px rgba(158,156,158,1);
--moz-box-shadow: 2px 1px 10px 0px rgba(158,156,158,1);
-box-shadow: 2px 1px 10px 0px rgba(158,156,158,1);
-z-index: 1;
-overflow-y: auto;
-    /*
-    background: #2f9fff;
-    */
-}
-
-.nav-tabs{
-    background: #fff;
-}
-
-::-webkit-input-placeholder { 
-    color:    #bdc3c7;
-}
-:-moz-placeholder { 
-   color:    #7f8c8d;
-   opacity:  1;
-}
-::-moz-placeholder { 
-   color:    #7f8c8d;
-   opacity:  1;
-}
-:-ms-input-placeholder { 
-   color:    #7f8c8d;
-}
-::-ms-input-placeholder { 
-   color:    #7f8c8d;
-}
-
-.inbound-color{
-    color: #9b59b6;
-}
-
-.outbound-color{
-    color: #2ecc71;
-}
-
-
-
-.inbound-color label, .outbound-color label{
-    font-weight: normal;
-}
-
-.checkboxArea{
-    padding-top:20px;
-}
-
-
-#pop_up{
-    background-color: #e0e0eb;
-}
-
-#main_sidebar{
-overflow:auto;
 }

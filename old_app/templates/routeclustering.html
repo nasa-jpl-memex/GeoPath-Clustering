@@ -1,0 +1,331 @@
+
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <script src="{{ jquery }}"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" type="text/javascript"></script>
+    <script src="http://d3js.org/d3.geo.projection.v0.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ simple_sidebar }}">
+    <link rel="stylesheet" href="{{ app_css }}">
+    </head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{{sub_domain}}/">Memex Phonetracker</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="{{sub_domain}}/routeclustering">Route Clustering</a></li>
+        <li><a href="{{sub_domain}}/cityclustering">Route Clustering by City</a></li>
+        <li><a href="{{sub_domain}}/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container-fluid full_height_width">
+    <div class="row full_height_width">
+        <div class="col-md-1">
+            <div id="sidebar-wrapper" style="background-color: rgba(0, 0, 0, 0.7); max-width: 100%; overflow-x: hidden;">
+                <ul class="sidebar-nav">
+                    <form action="">
+                        <input type="text" name="Search" value="" id="search_phone" placeholder="search for a phone number">
+                        <button type="button" class="btn btn-default" onclick="draw_routes(0)">Search</button>
+                    </form>
+                    <span class="white">Cluster similarity:</span>
+                    <form action="" class="white">
+                        <input type="radio" name="gender" value="1" checked="checked" onclick="draw_routes(1)">  1
+                        <input type="radio" name="gender" value="2" onclick="draw_routes(2)" > 2
+                        <input type="radio" name="gender" value="3" onclick="draw_routes(3)"> 3
+                    </form>
+                    <br>
+                    <div id="date_picker">
+                        <span class="white">From:</span>
+                        <select id="start_date">
+                            {% for date in all_dates %}
+                            <option value="{{date}}" id="start_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="white">To:</span>
+                        <select id="end_date">
+                            {% for date in all_dates|reverse %}
+                            <option value="{{date}}" id="end_date")>{{date}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <br>
+                    <span id="num_phones"></span>
+                    <div class="input-group col-md-12" id="phone_place_holder">
+                        <span id="cluster_phone" >No phone number found, click on paths</span>
+                    </div>
+                    <div id="list_results"></div>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-10 full_height_width">
+            <div id="map" class="full_height_width"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+var width = 960;
+var height = 960;
+var links = [];
+var level = 1;
+
+var map = L.map('map',{zoomControl: true}).setView([30, -30], 2);
+    mapLink =
+    '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+    L.tileLayer(
+    'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; ' + mapLink + ' Contributors',
+    maxZoom: 18,
+    }).addTo(map);
+    map.zoomControl.setPosition('topright');
+	map._initPathRoot()
+
+var svg = d3.select("#map").select("svg");
+var g = svg.append("g").attr("class", "leaflet-zoom-hide");
+var arcGroup = g.append('g');
+
+
+var transform = d3.geo.transform({point: projectPoint}),
+    path = d3.geo.path().projection(transform);
+
+
+function projectPoint(x, y) {
+  var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+  this.stream.point(point.x, point.y);
+}
+
+
+d3.selection.prototype.moveToFront = function() {
+      return this.each(function(){
+  this.parentNode.appendChild(this);
+  });
+ }
+
+
+function phone_mouseover(d){
+    cluster_routes = d3.selectAll(".arc");
+    for (i = 0; i < cluster_routes[0].length; i++) {
+       each_phone = cluster_routes[0][i].__data__.phone;
+       if (each_phone == d){
+            cluster_routes[0][i].style.stroke = "#ff0000";
+       }
+       else{
+        cluster_routes[0][i].style.strokeOpacity = "0.2";
+       }
+    }
+}
+
+
+function phone_mouseout(){
+    d3.selectAll(".arc").style("stroke", "#224be2");
+    d3.selectAll(".arc").style("stroke-opacity", "1");
+    d3.selectAll(".arc").style("stroke-width", "2px");
+}
+
+
+
+function mouseover(d) {
+    var code = d.code;
+    d3.selectAll("#"+code).style("stroke", "#ff0000");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "3.5px");
+}
+
+function mouseout(d) {
+    var code = d.code;
+    d3.selectAll("#"+code).style("stroke", "#224be2");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "2px");
+}
+
+function clickline(d) {
+    var code = d.code;
+    var all_arcs = d3.selectAll(".arc");
+    for (i = 0; i < all_arcs[0].length; i++) {
+       var arc_id = all_arcs[0][i].id;
+       if (arc_id != code){
+            d3.selectAll("#"+arc_id).remove();
+       }
+    }
+    var tmp = []
+    for (i = 0; i < links.length; i++) {
+        var link_code = links[i]['code'][0];
+        if (link_code == code[0]){
+            tmp.push(links[i])
+        }
+    }
+    links = tmp;
+    d3.selectAll("#"+code).style("stroke", "#224be2");
+    d3.selectAll("#"+code).style("stroke-opacity", "1");
+    d3.selectAll("#"+code).style("stroke-width", "3.5px");
+    var lines = d3.selectAll("#"+code);
+
+    var tmp = [];
+    document.getElementById("phone_place_holder").innerHTML = "";
+    lines[0].forEach(function(entry){
+        if (tmp.indexOf(entry.attributes.value.value) > -1){
+        }else{
+        document.getElementById("phone_place_holder").innerHTML += '<li id="cluster_phone" onmouseover=phone_mouseover(' + entry.attributes.value.value + ')  onmouseout=phone_mouseout()' +  '>' + entry.attributes.value.value + '</li>';
+        tmp.push(entry.attributes.value.value);
+        }
+      })
+      document.getElementById("num_phones").innerHTML = "<span id='num_phones'>" + tmp.length + " phone number found <span>";
+}
+
+var start_date = parseInt(document.getElementById("start_date").value);
+var end_date = parseInt(document.getElementById("end_date").value);
+
+draw_routes(level)
+
+$( "#date_picker" ).change(function() {
+    start_date = parseInt(document.getElementById("start_date").value);
+    end_date = parseInt(document.getElementById("end_date").value);
+    draw_routes(level)
+});
+
+
+function draw_routes(l){
+        level = l
+        var cluster = eval('{{cluster|tojson|safe}}');
+        links = [];
+        if (level != 0 ){
+            for(var i=0, len=cluster.length; i<len; i++){
+                cluster[i].dates.sort();
+                if (cluster[i].level == l){
+                    var seg_in_date_range = false;
+                    for(var d=0, d_len=cluster[i].dates.length; d<d_len; d++){
+                        var date = cluster[i].dates[d];
+                        if (date<=end_date && date>=start_date){
+                            seg_in_date_range = true;
+                        }
+                    }
+                    if (seg_in_date_range){
+                        links.push({
+                            type: "LineString",
+                            coordinates: cluster[i].points,
+                            code: cluster[i].code,
+                            phone: cluster[i].phone,
+                            level: cluster[i].level,
+                            date: cluster[i].dates
+                        });
+                    }
+                  }
+            }
+         }else{
+             var phone = document.getElementById('search_phone').value;
+             var search_code_level = []
+             for(var i=0, len=cluster.length; i<len; i++){
+                    if (cluster[i].phone == phone){
+                        search_code_level.push({"code":cluster[i].code[0], "level":cluster[i].level});
+                    }
+             }
+         for(var s=0, len=search_code_level.length; s<len; s++){
+             if (search_code_level[s] !== undefined) {
+                 for(var i=0, len=cluster.length; i<len; i++){
+                    if (cluster[i].code == search_code_level[s]["code"]  && cluster[i].level == search_code_level[s]["level"]){
+                        links.push({
+                            type: "LineString",
+                            coordinates: cluster[i].points,
+                            code: cluster[i].code,
+                            phone: cluster[i].phone,
+                            level: cluster[i].level
+                        });
+                      }
+                 }
+           }
+        }
+      }
+
+        var pathArcs = arcGroup.selectAll(".arc").data(links);
+
+        pathArcs.enter()
+            .append("path")
+            .attr({
+                'class': 'arc'
+            }).style({
+                fill: 'none',
+            })
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
+            .on("click", clickline);
+
+        var all_paths = d3.selectAll(".arc");
+        all_paths
+          .attr({'id': function(d) { return d.code }})
+          .attr({'value': function(d) { return d.phone }});
+            pathArcs.attr({
+                d: path
+            })
+            .style({
+                stroke: '#224be2',
+                "stroke-width": '2px',
+                "stroke-opacity": 1,
+            })
+        pathArcs.exit().remove();
+
+ } <!--end of draw_routes-->
+
+
+
+
+map.on("viewreset", update);
+update();
+
+function update() {
+    d3.selectAll(".arc").remove();
+     var pathArcs = arcGroup.selectAll(".arc").data(links);
+
+        pathArcs.enter()
+            .append("path")
+            .attr({
+                'class': 'arc'
+            }).style({
+                fill: 'none',
+            })
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
+            .on("click", clickline);
+
+        d3.selectAll(".arc")
+          .attr({'id': function(d) { return d.code }})
+          .attr({'value': function(d) { return d.phone }});
+            pathArcs.attr({
+                d: path
+            })
+            .style({
+                stroke: '#224be2',
+                "stroke-width": '2px',
+                "stroke-opacity": 1,
+            })
+        pathArcs.exit().remove();
+    }
+
+
+    </script>
+  </body>
+</html>

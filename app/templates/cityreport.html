@@ -45,8 +45,8 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
         <li><a href="{{sub_domain}}/routeclustering">Route Clustering</a></li>
-        <li><a href="{{sub_domain}}/cityreport">City Report</a></li>
-        <li class="active"><a href="{{sub_domain}}/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
+        <li class="active"><a href="{{sub_domain}}/cityreport">City Report</a></li>
+        <li><a href="{{sub_domain}}/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
@@ -59,19 +59,21 @@
                 <div id="city" class="tab-pane fade in active">
                     <form action="/url" class="breathing-space">
                         <div class="row form-group">
-                            <div class="col-xs-6" id="start_date_container"><input type="text" id="start_date" class="textfields" placeholder="Start Date (mm/dd/yyyy)"/></div>
-                            <div class="col-xs-6" id="end_date_container"><input type="text" id="end_date" class="textfields" placeholder="End Date (mm/dd/yyyy)"/></div>
+                            <div class="col-xs-6" id="city_start_date_container"><input type="text" id="city_start_date" class="textfields" placeholder="Start Date (mm/dd/yyyy)"/></div>
+                            <div class="col-xs-6" id="city_end_date_container"><input type="text" id="city_end_date" class="textfields" placeholder="End Date (mm/dd/yyyy)"/></div>
                         </div>
                         <div id="cities_box">
                             <div class="row form-group">
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Phone Number (Optional)" id="phone_number" name="phone_number"/></div>
+                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="City Name" id="city_name" name="city_name"/></div>
+                                <div class="col-xs-3"><input type="text" class="textfields" placeholder="Radius" id="city_radius" name="city_radius"/></div>
+                                <div class="col-xs-1">mile</div>
                             </div>
                         </div>
                         <div class="row form-group">
                             <div class="col-xs-12"><input type="button" class="btn btn-primary btn-block" value="Search" onclick="query()"></div>
                         </div>
                     </form>
-                    <div id="search_results"></div>
+                    <div id="city_search_results"></div>
                 </div>
             </div>
         </div>
@@ -93,8 +95,6 @@ var links = [];
 var cities_found = [];
 var feature;
 var segments = [];
-var entities_found = []
-var results;
 
 var map = L.map('map',{zoomControl: true}).setView([30, -30], 2);
     mapLink =
@@ -130,83 +130,141 @@ var tip = d3.tip()
   .attr('class', 'd3-tip')
   .offset([-10, 0])
   .html(function(d) {
-    return "<div id=\"pop_up\"><h3>" + d.city_name + d.count + "</h3>" ;
+    return "<div id=\"pop_up\"><h3>" + d.city_name + "</h3><p>In: " + d.in_goings+ " - Out: " + d.out_goings + "</p></div>" ;
   })
 
 
 svg.call(tip);
 
-function draw_city(entity){
-    var tmp = results[entity]['locations'];
-    tmp.forEach(function(d) {
-                d.LatLng = new L.LatLng(d.latitude, d.longitude)
-    });
 
-    var radius = d3.scale.sqrt()
-                .domain([0, 1e4])
-                .range([4, 10]);
+function draw_route(entity_id, c){
+    var lats = [];
+    var lons = [];
+    links = [];
+        for(var i=0, len=segments.length; i<len; i++){
+            if (segments[i]['phone'] == entity_id){
+                    links.push({
+                        type: "LineString",
+                        id: "line_"+i,
+                        coordinates: segments[i].points,
+                        code: segments[i].code,
+                        phone: segments[i].phone,
+                        start_date: segments[i].start_date,
+                        end_date: segments[i].end_date,
+                        start_city: segments[i].start_city,
+                        end_city: segments[i].end_city,
+                        bound: segments[i].bound,
+                    });
+                    lats.push(segments[i].points[0][1]);
+                    lats.push(segments[i].points[1][1]);
+                    lons.push(segments[i].points[0][0]);
+                    lons.push(segments[i].points[1][0]);
+                }
+              }
 
-    d3.selectAll("circle").remove();
-    feature = g.selectAll("circle")
-        .data(tmp)
-        .enter().append("circle")
-        .style("stroke", "black")
-        .style("opacity", .6)
-        .style("fill", "red")
-        .attr("r", 7)
-        .attr({'id': function(d) { return d.city_name.replace(/\s/g, '') }})
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide);
+    var pathArcs = arcGroup.selectAll(".arc").data(links);
 
+    pathArcs.enter()
+        .append("path")
+        .attr({'class': 'arc'})
+        .style({fill: 'none'});
 
+    var all_paths = d3.selectAll(".arc");
+    all_paths
+      .attr({'id': function(d) { return d.id }})
+      .attr({'value': function(d) { return d.phone }});
+        pathArcs.attr({
+            d: path
+        })
+        .style({
+            stroke: function(d) { if (d.bound == 'in'){  return '#5b1c35' } else { return '#0066ff' } },
+            "stroke-width": '2px',
+            "stroke-opacity": 1,
+        })
+
+    pathArcs.exit().remove();
     document.getElementById("main_sidebar").style.display = "none";
     document.getElementById("selected_identity_info").style.display = "block";
     document.getElementById("selected_identity_info").innerHTML = '<a href="javascript:close_identity_info_box()"><span class="glyphicon glyphicon-remove" aria-hidden="true" style="float:right;"></span></a>'
-    document.getElementById("selected_identity_info").innerHTML += '<h3>' + entity + '</h3>';
+    document.getElementById("selected_identity_info").innerHTML += '<h3>' + entity_id + '</h3>';
 
-    tmp.forEach(function (element){
+
+    links.forEach(function (element){
         var selected_identity_info_div = document.getElementById('selected_identity_info');
-        selected_identity_info_div.innerHTML += "<div onmouseover=\"mouseover_result_hope('" + element['city_name'].replace(/\s/g, '') + "')\"  onmouseout=\"mouseout_result_hope('" + element['city_name'].replace(/\s/g, '') + "')\">"  + element['city_name'] + " - " + element['count'] + "<br>Dates: " + element['dates'] + "</div><hr>"
+        selected_identity_info_div.innerHTML += "<div onmouseover=\"mouseover_result_hope('" + element['id'] + "')\"  onmouseout=\"mouseout_result_hope('" + element['id'] + "')\">" + element['start_city'] + " (" + element['start_date'] + ") <br>" + element['end_city'] + " (" + element['end_date'] + ")</div> <hr>"
     })
-
-        map.on("viewreset", update);
+    var max_lat = parseFloat(Math.max.apply(Math, lats));
+    var min_lat = parseFloat(Math.min.apply(Math, lats));
+    var max_lon = parseFloat(Math.max.apply(Math, lons));
+    var min_lon = parseFloat(Math.min.apply(Math, lons));
+    map.fitBounds([[max_lat, min_lon], [min_lat, max_lon]]);
     update();
-}
+    map.on("viewreset", update);
+ }
 
 
 function query(){
+    d3.selectAll(".arc").remove();
     d3.selectAll("circle").remove();
     segments = [];
-    var search_results_div = document.getElementById('search_results');
-    search_results_div.innerHTML = "Searching . . ."
+    var city_search_results_div = document.getElementById('city_search_results');
+    city_search_results_div.innerHTML = "Searching . . ."
 
     var data = {}
-    var start_date = document.getElementById("start_date").value;
-    var end_date = document.getElementById("end_date").value;
-    var phone_number = document.getElementById("phone_number").value;
+    var start_date = document.getElementById("city_start_date").value;
+    var end_date = document.getElementById("city_end_date").value;
+    var city = document.getElementById("city_name").value;
+    var radius = document.getElementById("city_radius").value;
 
-    data['phone_number'] = phone_number;
+    data['city'] = city;
+    data['radius'] = radius;
     data['start_date'] = start_date;
     data['end_date'] = end_date;
 
     jQuery.ajax({
                 data: JSON.stringify(data),
                 type: 'POST',
-                url: '{{sub_domain}}/concurrent_phone_viewer/query',
+                url: '{{sub_domain}}/cityreport/query',
                 dataType: "JSON",
                 contentType:'application/json',
                 success: function(data){
+                    cities_found = data['cities_found'];
+                    segments = data['segments'];
                     entities_found = data['entities_found'];
-                    results = data['results'];
-                    search_results_div.innerHTML = ""
-                    search_results_div.insertAdjacentHTML('beforeend', '<h3>' + entities_found.length + ' entity found. </h3>' );
+                    draw_cities();
+                    city_search_results_div.innerHTML = ""
+                    city_search_results_div.insertAdjacentHTML('beforeend', '<h3>' + entities_found.length + ' entity found. </h3>' );
+                    var c = 0
                     entities_found.forEach(function (element){
-                        search_results_div.insertAdjacentHTML('beforeend', '<a href="javascript:draw_city(\''+ element[0] + '\')"><h3>'+ element[0] +'</h3></a>' );
-                        search_results_div.insertAdjacentHTML('beforeend', '<p>Travelled '+ element[1] +' times</p><hr>' );
+                        city_search_results_div.insertAdjacentHTML('beforeend', '<a href="javascript:draw_route(' + '\'' + element[0] + '\',' + c + ')"><h3 id=segment_' + c + '>'+ element[0] +'</h3></a>' );
+                        city_search_results_div.insertAdjacentHTML('beforeend', '<p>In:'+ element[1] +' - Out:' + element[2] + '</p><hr>' );
+                        c += 1
                     });
                 }
 
     });
+}
+
+function draw_cities(){
+    cities_found.forEach(function(d) {
+                 d.LatLng = new L.LatLng(d.lat, d.lon)
+                 })
+    var radius = d3.scale.sqrt()
+                .domain([0, 1e4])
+                .range([4, 10]);
+
+    d3.selectAll("circle").remove();
+    feature = g.selectAll("circle")
+        .data(cities_found)
+        .enter().append("circle")
+        .style("stroke", "black")
+        .style("opacity", .6)
+        .style("fill", "red")
+        .attr("r",  function(d) {return radius(d.in_goings + d.out_goings) })
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
+
+        update();
 }
 
 map.on("viewreset", update);
@@ -218,39 +276,55 @@ function update(){
                 map.latLngToLayerPoint(d.LatLng).x +","+
                 map.latLngToLayerPoint(d.LatLng).y +")";
     })
+      d3.selectAll(".arc").remove();
+     var pathArcs = arcGroup.selectAll(".arc").data(links);
+
+        pathArcs.enter()
+            .append("path")
+            .attr({
+                'class': 'arc'
+            }).style({
+                fill: 'none',
+            });
+
+        var p = d3.selectAll(".arc")
+          .attr({'id': function(d) { return d.id }})
+          .attr({'value': function(d) { return d.phone }});
+            pathArcs.attr({
+                d: path
+            })
+            .style({
+                stroke: function(d) { if (d.bound == 'in'){  return '#5b1c35' } else { return '#0066ff' } },
+                "stroke-width": '2px',
+                "stroke-opacity": 1,
+            })
+        pathArcs.exit().remove();
 }
 
 function close_identity_info_box(){
-    d3.selectAll("circle").remove();
+    d3.selectAll(".arc").remove();
     document.getElementById("main_sidebar").style.display = "block";
     document.getElementById("selected_identity_info").style.display = "none";
 }
 
-
 function mouseover_result_hope(id){
     var selection = d3.selectAll("#"+id).style("stroke", "#ff0000");
-    d3.selectAll("#"+id).style("fill", "blue");
-    d3.selectAll("#"+id).style("stroke", "black");
-    d3.selectAll("#"+id).style("r", "10");
     d3.selectAll("#"+id).style("stroke-opacity", "1");
-    d3.selectAll("#"+id).style("stroke-width", "2px");
+    d3.selectAll("#"+id).style("stroke-width", "3.5px");
     selection.moveToFront();
 }
 
 function mouseout_result_hope(id) {
-    d3.selectAll("#"+id).style("fill", "red");
-    d3.selectAll("#"+id).style("stroke", "black");
-    d3.selectAll("#"+id).style("r", "7");
-    d3.selectAll("#"+id).style("stroke-opacity", ".6");
+    d3.selectAll("#"+id).style("stroke", "#224be2");
+    d3.selectAll("#"+id).style("stroke-opacity", "1");
     d3.selectAll("#"+id).style("stroke-width", "2px");
 }
-
 
 var startDate = new Date('{{min_date}}');
 var endDate = new Date('{{max_date}}');
 
-$('#start_date_container input').datepicker({startDate: startDate, endDate: endDate});
-$('#end_date_container input').datepicker({startDate: startDate, endDate: endDate});
+$('#city_start_date_container input').datepicker({startDate: startDate, endDate: endDate});
+$('#city_end_date_container input').datepicker({startDate: startDate, endDate: endDate});
 $('#latlon_start_date_container input').datepicker({startDate: startDate, endDate: endDate});
 $('#latlon_end_date_container input').datepicker({startDate: startDate, endDate: endDate});
 
