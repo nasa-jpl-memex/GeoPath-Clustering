@@ -44,7 +44,7 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li><a href="{{sub_domain}}/routeclustering">Route Clustering</a></li>
+        <li><a href="{{sub_domain}}/routematching">Route Matching</a></li>
         <li class="active"><a href="{{sub_domain}}/cityreport">City Report</a></li>
         <li><a href="{{sub_domain}}/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
       </ul>
@@ -177,8 +177,8 @@ function draw_route(entity_id, c){
             d: path
         })
         .style({
-            stroke: function(d) { if (d.bound == 'in'){  return '#5b1c35' } else { return '#0066ff' } },
-            "stroke-width": '2px',
+            "stroke": function(d) { if (d.bound == 'in'){  return '#FF1493' } else { return '#0066ff' } },
+            "stroke-width": 'spx',
             "stroke-opacity": 1,
         })
 
@@ -191,7 +191,7 @@ function draw_route(entity_id, c){
 
     links.forEach(function (element){
         var selected_identity_info_div = document.getElementById('selected_identity_info');
-        selected_identity_info_div.innerHTML += "<div onmouseover=\"mouseover_result_hope('" + element['id'] + "')\"  onmouseout=\"mouseout_result_hope('" + element['id'] + "')\">" + element['start_city'] + " (" + element['start_date'] + ") <br>" + element['end_city'] + " (" + element['end_date'] + ")</div> <hr>"
+        selected_identity_info_div.innerHTML += "<div onmouseover=\"mouseover_result_hope('" + element['id'] + "')\"  onmouseout=\"mouseout_result_hope('" + element['id'] + "')\">" + element['start_city'] + " (" + element['start_date'] + ") <br>" + element['end_city'] + " (" + element['end_date']  + ")<br> Bound: " + element['bound']+ "</div> <hr>"
     })
     var max_lat = parseFloat(Math.max.apply(Math, lats));
     var min_lat = parseFloat(Math.min.apply(Math, lats));
@@ -294,8 +294,8 @@ function update(){
                 d: path
             })
             .style({
-                stroke: function(d) { if (d.bound == 'in'){  return '#5b1c35' } else { return '#0066ff' } },
-                "stroke-width": '2px',
+                stroke: function(d) {if (d.bound == 'in'){  return '#FF1493' } else { return '#0066ff' } },
+                "stroke-width": '3px',
                 "stroke-opacity": 1,
             })
         pathArcs.exit().remove();
@@ -308,16 +308,16 @@ function close_identity_info_box(){
 }
 
 function mouseover_result_hope(id){
-    var selection = d3.selectAll("#"+id).style("stroke", "#ff0000");
+    var selection = d3.selectAll("#"+id).style("stroke", "#00FFFF");
     d3.selectAll("#"+id).style("stroke-opacity", "1");
-    d3.selectAll("#"+id).style("stroke-width", "3.5px");
+    d3.selectAll("#"+id).style("stroke-width", "5px");
     selection.moveToFront();
 }
 
 function mouseout_result_hope(id) {
-    d3.selectAll("#"+id).style("stroke", "#224be2");
+    d3.selectAll("#"+id).style("stroke", function(d) { console.log(d);if (d.bound == 'in'){  return '#FF1493' } else { return '#0066ff' } });
     d3.selectAll("#"+id).style("stroke-opacity", "1");
-    d3.selectAll("#"+id).style("stroke-width", "2px");
+    d3.selectAll("#"+id).style("stroke-width", "3px");
 }
 
 var startDate = new Date('{{min_date}}');

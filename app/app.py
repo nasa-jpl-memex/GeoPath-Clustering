@@ -27,29 +27,32 @@ app_css = "static/css/app.css"
 
 
 
-#to get first and last date
-min_date = 883728000.0
-max_date = 1492844400.0
-all_dates = []
-url  = "{0}/{1}/select?q=*%3A*&wt=json&fl=date&rows=2147483647".format(SOLR_URL, SOLR_AD_POINTS_CORE)
-# r = requests.get(url)
-# docs = r.json()['response']['docs']
-# for doc in docs:
-#     if doc['date'][0] not in all_dates:
-#         all_dates.append(doc['date'][0])
-# min_date = min(all_dates)
-# max_date = max(all_dates)
+#to get first and last date for date picker
+def min_max_date():
+    # all_dates = []
+    # url  = "{0}/{1}/select?q=*%3A*&wt=json&fl=date&rows=2147483647".format(SOLR_URL, SOLR_AD_POINTS_CORE)
+    # r = requests.get(url)
+    # docs = r.json()['response']['docs']
+    # for doc in docs:
+    #     if doc['date'][0] not in all_dates:
+    #         all_dates.append(doc['date'][0])
+    # min_date = min(all_dates)
+    # max_date = max(all_dates)
+    min_date = 883728000.0
+    max_date = 1492844400.0
+    min_date = datetime.datetime.fromtimestamp(int(min_date)).strftime('%m/%d/%Y')
+    max_date = datetime.datetime.fromtimestamp(int(max_date)).strftime('%m/%d/%Y')
+    return min_date, max_date
 
-min_date = datetime.datetime.fromtimestamp(int(min_date)).strftime('%m/%d/%Y')
-max_date = datetime.datetime.fromtimestamp(int(max_date)).strftime('%m/%d/%Y')
+min_date, max_date = min_max_date()
 
 @app.route("/")
 def index():
     return render_template('index.html', app_css=app_css, sub_domain=SUBDOMAIN)
 
-@app.route("/routeclustering/search", methods=['GET', 'POST'])
-@app.route("/routeclustering")
-def routeclustering():
+@app.route("/routematching/search", methods=['GET', 'POST'])
+@app.route("/routematching")
+def routematching():
     cluster = []
     selected_cities_segments = []
     j = request.get_json()
@@ -90,7 +93,7 @@ def routeclustering():
         entity_found.sort(key=lambda x: x[1], reverse=True)
         return jsonify({'entity_found':entity_found, "cluster" :cluster}), 200
     else:
-        return render_template('routeclustering.html', app_css=app_css, cluster=cluster, sub_domain=SUBDOMAIN, min_date=min_date, max_date=max_date)
+        return render_template('routematching.html', app_css=app_css, cluster=cluster, sub_domain=SUBDOMAIN, min_date=min_date, max_date=max_date)
 
 
 

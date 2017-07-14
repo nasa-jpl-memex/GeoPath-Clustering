@@ -42,7 +42,7 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="{{sub_domain}}/routeclustering">Route Clustering</a></li>
+        <li class="active"><a href="{{sub_domain}}/routematching">Route Matching</a></li>
         <li><a href="{{sub_domain}}/cityreport">City Report</a></li>
         <li><a href="{{sub_domain}}/concurrent_phone_viewer">Concurrent Phone Viewer</a></li>
       </ul>
@@ -285,7 +285,7 @@ function city_search(){
     jQuery.ajax({
                 data: JSON.stringify(data),
                 type: 'POST',
-                url: '{{sub_domain}}/routeclustering/search',
+                url: '{{sub_domain}}/routematching/search',
                 dataType: "JSON",
                 contentType:'application/json',
                 success: function(data){
@@ -327,7 +327,7 @@ function latlon_search(){
     jQuery.ajax({
                 data: JSON.stringify(data),
                 type: 'POST',
-                url: '{{sub_domain}}/routeclustering/search',
+                url: '{{sub_domain}}/routematching/search',
                 dataType: "JSON",
                 contentType:'application/json',
                 success: function(data){
