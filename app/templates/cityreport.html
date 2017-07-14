@@ -178,7 +178,7 @@ function draw_route(entity_id, c){
         })
         .style({
             "stroke": function(d) { if (d.bound == 'in'){  return '#FF1493' } else { return '#0066ff' } },
-            "stroke-width": 'spx',
+            "stroke-width": '3px',
             "stroke-opacity": 1,
         })
 
@@ -315,7 +315,7 @@ function mouseover_result_hope(id){
 }
 
 function mouseout_result_hope(id) {
-    d3.selectAll("#"+id).style("stroke", function(d) { console.log(d);if (d.bound == 'in'){  return '#FF1493' } else { return '#0066ff' } });
+    d3.selectAll("#"+id).style("stroke", function(d) {if (d.bound == 'in'){  return '#FF1493' } else { return '#0066ff' } });
     d3.selectAll("#"+id).style("stroke-opacity", "1");
     d3.selectAll("#"+id).style("stroke-width", "3px");
 }
