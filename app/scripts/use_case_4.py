@@ -60,7 +60,7 @@ def use_case_4(city, start_date, end_date, radius):
                         "end_city":str(doc['end_city'][0].encode("ascii", "ignore")), \
                         "start_date":datetime.datetime.fromtimestamp(int(doc['start_date'][0])).strftime('%Y-%m-%d'), \
                         "end_date":datetime.datetime.fromtimestamp(int(doc['end_date'][0])).strftime('%Y-%m-%d'),\
-                        "bound": "in"
+                        "bound": "out"
                         })
         if doc['phone_number'][0] in entities_found:
             entities_found[doc['phone_number'][0]]['out'] +=1
@@ -85,7 +85,7 @@ def use_case_4(city, start_date, end_date, radius):
                         "end_city":str(doc['end_city'][0].encode("ascii", "ignore")), \
                         "start_date":datetime.datetime.fromtimestamp(int(doc['start_date'][0])).strftime('%Y-%m-%d'), \
                         "end_date":datetime.datetime.fromtimestamp(int(doc['end_date'][0])).strftime('%Y-%m-%d'), \
-                        "bound": "out"
+                        "bound": "in"
                         })
         if doc['phone_number'][0] in entities_found:
             entities_found[doc['phone_number'][0]]['in'] +=1
