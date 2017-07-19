@@ -70,12 +70,12 @@
                         </div>
                         <div id="cities_box">
                             <div class="row form-group">
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="City Name" name="city_name"/></div>
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="City Name" name="city_name"/></div>
                                 <div class="col-xs-3"><input type="text" class="textfields" placeholder="Radius" name="city_radius"/></div>
                                 <div class="col-xs-1">mile</div>
                             </div>
                             <div class="row form-group">
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="City Name" name="city_name"/></div>
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="City Name" name="city_name"/></div>
                                 <div class="col-xs-3"><input type="text" class="textfields" placeholder="Radius" name="city_radius"/></div>
                                 <div class="col-xs-1">mile</div>
                             </div>
@@ -97,14 +97,14 @@
                         </div>
                         <div id="latlon_box">
                             <div class="row form-group">
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Latitude" name="latitude"/></div>
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Longitude" name="longitude"/></div>
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="Latitude" name="latitude"/></div>
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="Longitude" name="longitude"/></div>
                                 <div class="col-xs-3"><input type="text" class="textfields" placeholder="Radius" name="latlon_radius"/></div>
                                 <div class="col-xs-1">mile</div>
                             </div>
                             <div class="row form-group">
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Latitude" name="latitude"/></div>
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Longitude" name="longitude"/></div>
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="Latitude" name="latitude"/></div>
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="Longitude" name="longitude"/></div>
                                 <div class="col-xs-3"><input type="text" class="textfields" placeholder="Radius" name="latlon_radius"/></div>
                                 <div class="col-xs-1">mile</div>
                             </div>
@@ -345,7 +345,7 @@ function latlon_search(){
 function add_city_textbox(){
     var div = document.getElementById('cities_box');
     div.insertAdjacentHTML('beforeend', '<div class="row form-group"> \
-                                            <div class="col-xs-8">\
+                                            <div class="col-xs-7">\
                                                 <input type="text" class="textfields" placeholder="City Name" name="city_name"/>\
                                             </div>\
                                             <div class="col-xs-3">\
@@ -360,8 +360,8 @@ function add_city_textbox(){
 function add_latlon_textbox(){
     var div = document.getElementById('latlon_box');
     div.insertAdjacentHTML('beforeend', '<div class="row form-group"> \
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Latitude" name="latitude"/></div>\
-                                <div class="col-xs-8"><input type="text" class="textfields" placeholder="Longitude" name="longitude"/></div>\
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="Latitude" name="latitude"/></div>\
+                                <div class="col-xs-7"><input type="text" class="textfields" placeholder="Longitude" name="longitude"/></div>\
                                 <div class="col-xs-3"><input type="text" class="textfields" placeholder="Radius" name="latlon_radius"/></div>\
                                 <div class="col-xs-1">mile</div>\
                             </div>');
