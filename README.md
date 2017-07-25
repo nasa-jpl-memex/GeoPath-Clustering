@@ -26,6 +26,13 @@ https://oodt.jpl.nasa.gov/wiki/display/MEMEX/Use+case+4%3A+City+Report
 
 Currently use case number 1 has not been implemented
 
+#### Dataset and Schema:
+
 We used Apache Solr to index ads data point and segments as two separate core, you can find the shcema format for each in  https://oodt.jpl.nasa.gov/wiki/display/MEMEX/Dataset+and+Schema 
 
-Data have been extracted from Memex HBase table (lattice_hdfs) and converted to json format to inxed to Solr.
+
+#### Installation:
+
+To run this application Solr is need. Data need to be extracted from lattice_hdfs and converted to json following the schema and indexed to Solr. You can change config.txt for Solr and Flask port and more.
+
+Flask, requests and ConfigParser can be installed through 'pip install'
