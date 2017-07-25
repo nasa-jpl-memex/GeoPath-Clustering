@@ -198,7 +198,7 @@ function query(){
                 success: function(data){
                     entities_found = data['entities_found'];
                     results = data['results'];
-                    search_results_div.innerHTML = ""
+                    search_results_div.innerHTML = "Result not found."
                     search_results_div.insertAdjacentHTML('beforeend', '<h3>' + entities_found.length + ' entity found. </h3>' );
                     entities_found.forEach(function (element){
                         search_results_div.insertAdjacentHTML('beforeend', '<a href="javascript:draw_city(\''+ element[0] + '\')"><h3>'+ element[0] +'</h3></a>' );
