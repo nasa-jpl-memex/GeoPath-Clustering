@@ -24,6 +24,8 @@ https://oodt.jpl.nasa.gov/wiki/display/MEMEX/Use+case+3%3A+Search+for+Routes+by+
 Given a specific city, present information about the routes that enter and exit through the city ( over a time range ?)
 https://oodt.jpl.nasa.gov/wiki/display/MEMEX/Use+case+4%3A+City+Report
 
-
 Currently use case number 1 has not been implemented
-Dataset and Schema https://oodt.jpl.nasa.gov/wiki/display/MEMEX/Dataset+and+Schema
+
+We used Apache Solr to index ads data point and segments as two separate core, you can find the shcema format for each in  https://oodt.jpl.nasa.gov/wiki/display/MEMEX/Dataset+and+Schema 
+
+Data have been extracted from Memex HBase table (lattice_hdfs) and converted to json format to inxed to Solr.
