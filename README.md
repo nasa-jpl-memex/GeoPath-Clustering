@@ -1,4 +1,4 @@
-# GeoPath-Clusetring
+# GeoPath-Clustering
 Memex Route Clustering project is trying to provide tools and technologies to be able explore some Memex data as route format. Routes is defined as moving object through time into different geo-location. One of main goal of this project is to develop an algorithm to be able to cluster routes that are traveling same path which helps us to not only understand more about the data but also find some anomalies.
 
 
